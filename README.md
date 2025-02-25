@@ -103,7 +103,7 @@ RTL Fixer:
 1. Clone the repository
 2. Install all required dependencies:
    ```
-   npm install webpack webpack-cli @babel/core babel-loader @babel/preset-env copy-webpack-plugin --save-dev
+   npm install webpack webpack-cli zip-webpack-plugin @babel/core babel-loader @babel/preset-env copy-webpack-plugin --save-dev
    ```
 3. Build the extension:
    ```
