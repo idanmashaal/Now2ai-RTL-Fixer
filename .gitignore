@@ -89,7 +89,11 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# dist
+
+# Keep dist directory but ignore build subfolders
+dist/*
+!dist/.gitkeep
 
 # Gatsby files
 .cache/
