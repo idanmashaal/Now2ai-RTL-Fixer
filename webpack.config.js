@@ -24,8 +24,9 @@ const getOutputPath = (mode) => {
 };
 
 module.exports = (env, argv) => {
-  const mode = argv.mode; // Get the mode from the webpack command
-  const outputPath = getOutputPath(mode); // Determine the output path
+  const mode = argv.mode;
+  const outputPath = getOutputPath(mode);
+  const isPackageScript = env.package; // Check for the 'package' env variable
 
   return {
     mode: mode,
@@ -35,7 +36,7 @@ module.exports = (env, argv) => {
       popup: "./src/popup.js",
     },
     output: {
-      path: outputPath, // Set the output path dynamically
+      path: outputPath,
       filename: "[name].js",
       clean: true,
     },
@@ -62,10 +63,12 @@ module.exports = (env, argv) => {
           { from: "src/popup.html", to: "popup.html" },
         ],
       }),
-      new ZipPlugin({
-        path: path.resolve(__dirname, "dist", mode), // Output zip in the mode subfolder
-        filename: buildFolder + ".zip",
-      }),
-    ],
+      // Conditionally add ZipPlugin
+      isPackageScript &&
+        new ZipPlugin({
+          path: path.resolve(__dirname, "dist", mode),
+          filename: buildFolder + ".zip",
+        }),
+    ].filter(Boolean),
   };
 };

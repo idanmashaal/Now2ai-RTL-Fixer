@@ -4,9 +4,10 @@
   "description": "Now2.ai RTL text handling fix for AI chat platforms",
   "scripts": {
     "dev:build": "webpack --mode development",
+    "dev:package": "webpack --mode development --env package",
     "dev:watch": "webpack --mode development --watch",
     "prod:build": "webpack --mode production",
-    "prod:package": "npm run prod:build"
+    "prod:package": "webpack --mode production --env package"
   },
   "author": "Idan Mashaal Now2.ai",
   "license": "GPL-3.0",
