@@ -1,5 +1,6 @@
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
+const ZipPlugin = require("zip-webpack-plugin");
 
 // Create a timestamp for the build folder
 const getTimestamp = () => {
@@ -52,6 +53,10 @@ module.exports = {
         { from: "icons", to: "icons" },
         { from: "src/popup.html", to: "popup.html" },
       ],
+    }),
+    new ZipPlugin({
+      path: path.resolve(__dirname, "dist"),
+      filename: buildFolder + ".zip",
     }),
   ],
 };

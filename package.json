@@ -1,14 +1,15 @@
 {
-  "name": "rtl-fixer-extension",
+  "name": "now2ai-rtl-fixer-extension",
   "version": "1.0.0",
-  "description": "RTL text handling fix for AI chat platforms",
+  "description": "Now2.ai RTL text handling fix for AI chat platforms",
   "scripts": {
-    "build": "webpack --mode production",
-    "dev": "webpack --mode development --watch",
-    "package": "npm run build && cd dist && zip -r ../rtl-fixer.zip ."
+    "dev:build": "webpack --mode development",
+    "dev:watch": "webpack --mode development --watch",
+    "prod:build": "webpack --mode production",
+    "prod:package": "npm run prod:build"
   },
-  "author": "Now2.ai",
-  "license": "MIT",
+  "author": "Idan Mashaal Now2.ai",
+  "license": "GPL-3.0",
   "devDependencies": {
     "@babel/core": "^7.26.9",
     "@babel/preset-env": "^7.26.9",
