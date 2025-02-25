@@ -106,20 +106,20 @@ RTL Fixer:
    npm install webpack webpack-cli zip-webpack-plugin @babel/core babel-loader @babel/preset-env copy-webpack-plugin --save-dev
    ```
 3. Build the extension:
-   ```
-   npm run build
-   ```
+   - For development build:
+     ```
+     npm run dev:build
+     ```
+   - For production build:
+     ```
+     npm run prod:build
+     ```
    This creates the production build using webpack in the `dist` directory
 4. For development with auto-rebuild:
    ```
-   npm run dev
+   npm run dev:watch
    ```
    This runs webpack in development mode with the watch flag for automatic rebuilds
-5. Package for distribution:
-   ```
-   npm run package
-   ```
-   This builds the extension and creates a zip file for submission to the Chrome Web Store
 
 ## Origin
 
