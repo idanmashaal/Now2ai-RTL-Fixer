@@ -5,7 +5,7 @@
 
 ## Overview
 
-[Now2.ai](https://now2.ai) RTL Fixer is a Chrome extension that automatically fixes RTL (Right-to-Left) text handling in AI chat platforms. If you've ever tried typing Hebrew or other RTL languages in AI assistants, you've likely encountered issues with text alignment, mixed language display, and overall text direction. This extension solves these problems seamlessly.
+Now2.ai RTL Fixer is a Chrome extension that automatically fixes RTL (Right-to-Left) text handling in AI chat platforms. If you've ever tried typing Hebrew or other RTL languages in AI assistants, you've likely encountered issues with text alignment, mixed language display, and overall text direction. This extension solves these problems seamlessly.
 
 ## Supported Platforms
 
@@ -101,10 +101,25 @@ RTL Fixer:
 ### Building From Source
 
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Build the extension: `npm run build`
-4. For development with auto-rebuild: `npm run dev`
-5. Package for distribution: `npm run package`
+2. Install all required dependencies:
+   ```
+   npm install webpack webpack-cli @babel/core babel-loader @babel/preset-env copy-webpack-plugin --save-dev
+   ```
+3. Build the extension:
+   ```
+   npm run build
+   ```
+   This creates the production build using webpack in the `dist` directory
+4. For development with auto-rebuild:
+   ```
+   npm run dev
+   ```
+   This runs webpack in development mode with the watch flag for automatic rebuilds
+5. Package for distribution:
+   ```
+   npm run package
+   ```
+   This builds the extension and creates a zip file for submission to the Chrome Web Store
 
 ## Origin
 
