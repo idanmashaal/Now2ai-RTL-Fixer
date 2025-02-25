@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTL Fixer Settings</title>
+  <style>
+    /* Base styles */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 16px;
+      width: 280px;
+      color: #333;
+      transition: color 0.3s, background-color 0.3s;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #262626;
+        color: #f0f0f0;
+      }
+    }
+
+    /* Header styles */
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .header img {
+      width: 48px;
+      height: 48px;
+      margin-right: 12px;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.7;
+      margin: 0;
+    }
+
+    /* Settings container */
+    .settings {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Switch control */
+    .switch-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .switch-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* Slider with no initial transition - transition added later */
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      border-radius: 22px;
+      transition: none;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: none;
+    }
+
+    input:checked + .slider {
+      background-color: #0071E3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #0071E3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Class to add transitions only when needed */
+    .enable-transitions .slider {
+      transition: background-color 0.3s;
+    }
+
+    .enable-transitions .slider:before {
+      transition: transform 0.3s;
+    }
+
+    /* Status text */
+    .status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    /* Refresh notice */
+    .refresh-notice {
+      font-size: 12px;
+      margin-top: 8px;
+      color: #666;
+    }
+
+    .refresh-link {
+      color: #0071E3;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 24px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      padding-top: 12px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .footer a {
+      color: #0071E3;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .footer {
+        border-top-color: rgba(255,255,255,0.1);
+      }
+      .footer a {
+        color: #66b3ff;
+      }
+      .status {
+        color: #aaa;
+      }
+      .refresh-notice {
+        color: #aaa;
+      }
+      .refresh-link {
+        color: #66b3ff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon48.png" alt="RTL Fixer">
+    <div class="header-text">
+      <h1 class="title">RTL Fixer</h1>
+      <p class="subtitle">by Now2.ai</p>
+    </div>
+  </div>
+
+  <div class="settings" id="settings-container">
+    <div class="setting-item" id="toggle-container" style="opacity: 0">
+      <div class="switch-container">
+        <span class="switch-label">Enable for this site</span>
+        <label class="switch">
+          <input type="checkbox" id="site-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="status" id="status-text">RTL Fixer is enabled for this site.</p>
+      <p class="refresh-notice" id="refresh-notice" style="display: none;">
+        For best results, <span class="refresh-link" id="refresh-link">refresh the page</span>.
+      </p>
+    </div>
+
+    <div class="setting-item" id="unsupported-container" style="display: none;">
+      <p class="status">This site is not supported by RTL Fixer.</p>
+      <p class="status">The extension works on:</p>
+      <ul style="font-size: 12px; margin-top: 4px;">
+        <li>Claude.ai</li>
+        <li>ChatGPT</li>
+        <li>Google Gemini</li>
+        <li>Google NotebookLM</li>
+        <li>Perplexity.ai</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://now2.ai" target="_blank">Visit Now2.ai</a> | v1.0.0
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

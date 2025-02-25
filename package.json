@@ -1,0 +1,20 @@
+{
+  "name": "rtl-fixer-extension",
+  "version": "1.0.0",
+  "description": "RTL text handling fix for AI chat platforms",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "package": "npm run build && cd dist && zip -r ../rtl-fixer.zip ."
+  },
+  "author": "Now2.ai",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.26.9",
+    "@babel/preset-env": "^7.26.9",
+    "babel-loader": "^9.2.1",
+    "copy-webpack-plugin": "^12.0.2",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
