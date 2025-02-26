@@ -62,7 +62,9 @@ The extension observes text elements on supported websites to apply RTL text han
 - It only applies CSS styling to fix text direction on supported websites
 - No content is saved or sent anywhere
 - No content analysis is performed beyond detecting if elements need RTL handling
-- The extension functions entirely within your browser
+-
+
+This automatic handling of RTL text provides a seamless user experience without requiring manual intervention for each text element.
 
 ## No Third-Party Services
 
@@ -76,7 +78,7 @@ Now2.ai RTL Fixer:
 ## How to Verify Our Claims
 
 The extension is open source, and you can verify our privacy claims by:
-1. Examining the source code in our GitHub repository
+1. Examining the source code in our GitHub repository at https://github.com/idanmashaal/Now2ai-RTL-Fixer (or your actual GitHub URL)
 2. Using Chrome's developer tools to monitor network activity (you'll see there are no outgoing connections)
 3. Inspecting what's stored in Chrome's storage via chrome://extensions
 
