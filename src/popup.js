@@ -11,14 +11,8 @@ const unsupportedContainer = document.getElementById("unsupported-container");
 const refreshNotice = document.getElementById("refresh-notice");
 const refreshLink = document.getElementById("refresh-link");
 
-// List of supported domain patterns
-const SUPPORTED_DOMAINS = [
-  /^(?:[^.]+\.)?claude\.ai$/,
-  /^notebooklm\.google\.com$/,
-  /^gemini\.google\.com$/,
-  /^(?:[^.]+\.)?perplexity\.ai$/,
-  /^(?:[^.]+\.)?chatgpt\.com$/,
-];
+// Load the list of supported domain patterns from domains config
+import { SUPPORTED_DOMAINS } from "./config/domains.js";
 
 // Current tab information
 let currentTab = null;

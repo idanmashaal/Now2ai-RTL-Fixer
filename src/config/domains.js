@@ -9,12 +9,12 @@
  * Each pattern is a regular expression matching specific AI platforms
  */
 export const SUPPORTED_DOMAINS = [
-  '^(?:[^.]+\\.)?claude\\.ai$',
-  '^notebooklm.google.com$',
-  '^gemini.google.com$',
-  '^(?:[^.]+\\.)?perplexity\\.ai$',
-  '^(?:[^.]+\\.)?chatgpt\\.com$'
-];
+  "^(?:[^.]+\\.)?claude\\.ai$",
+  "^notebooklm.google.com$",
+  "^gemini.google.com$",
+  "^(?:[^.]+\\.)?perplexity\\.ai$",
+  "^(?:[^.]+\\.)?chatgpt\\.com$",
+].map((pattern) => new RegExp(pattern));
 
 /**
  * @typedef {Object} Position
@@ -39,51 +39,51 @@ export const SUPPORTED_DOMAINS = [
  */
 export const DOMAIN_POSITIONS = [
   {
-    domain: '^(?:[^.]+\\.)?claude\\.ai$',
+    domain: "^(?:[^.]+\\.)?claude\\.ai$",
     position: {
-      top: '9px',
-      right: '146px',
-      padding: '8px 12px'
-    }
+      top: "9px",
+      right: "146px",
+      padding: "8px 12px",
+    },
   },
   {
-    domain: '^notebooklm.google.com$',
+    domain: "^notebooklm.google.com$",
     position: {
-      top: '12px',
-      right: '420px',
-      padding: '8px 12px'
-    }
+      top: "12px",
+      right: "420px",
+      padding: "8px 12px",
+    },
   },
   {
-    domain: '^gemini.google.com$',
+    domain: "^gemini.google.com$",
     position: {
-      top: '16px',
-      right: '122px',
-      padding: '8px 12px'
-    }
+      top: "16px",
+      right: "122px",
+      padding: "8px 12px",
+    },
   },
   {
-    domain: '^(?:[^.]+\\.)?perplexity\\.ai$',
+    domain: "^(?:[^.]+\\.)?perplexity\\.ai$",
     position: {
-      top: '18px',
-      right: '36px',
-      padding: '8px 12px'
-    }
+      top: "18px",
+      right: "36px",
+      padding: "8px 12px",
+    },
   },
   {
-    domain: '^(?:[^.]+\\.)?chatgpt\\.com$',
+    domain: "^(?:[^.]+\\.)?chatgpt\\.com$",
     position: {
-      top: '8px',
-      right: '195px',
-      padding: '8px 12px'
-    }
+      top: "8px",
+      right: "195px",
+      padding: "8px 12px",
+    },
   },
   {
-    domain: 'default',
+    domain: "default",
     position: {
-      bottom: '16px',
-      right: '66px',
-      padding: '8px 12px'
-    }
-  }
+      bottom: "16px",
+      right: "66px",
+      padding: "8px 12px",
+    },
+  },
 ];
