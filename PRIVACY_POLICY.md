@@ -62,7 +62,7 @@ The extension observes text elements on supported websites to apply RTL text han
 - It only applies CSS styling to fix text direction on supported websites
 - No content is saved or sent anywhere
 - No content analysis is performed beyond detecting if elements need RTL handling
--
+- The extension functions entirely within your browser
 
 This automatic handling of RTL text provides a seamless user experience without requiring manual intervention for each text element.
 
