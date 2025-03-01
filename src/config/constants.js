@@ -51,4 +51,10 @@ export const CSS_CLASSES = {
       dir: "rtl",
     },
   },
+  "ltr-force": {
+    cssRules: {
+      direction: "ltr !important",
+      dir: "ltr",
+    },
+  },
 };

@@ -12,7 +12,7 @@ const refreshNotice = document.getElementById("refresh-notice");
 const refreshLink = document.getElementById("refresh-link");
 
 // Load the list of supported domain patterns from domains config
-import { SUPPORTED_DOMAINS } from "./config/domains.js";
+import { isDomainSupported } from "./config/domains.js";
 
 // Current tab information
 let currentTab = null;
@@ -55,15 +55,6 @@ async function sendMessageToContentScript(tabId, message) {
     );
     return { success: false, error: "Connection failed" };
   }
-}
-
-/**
- * Checks if a domain is supported by the extension
- * @param {string} hostname - The hostname to check
- * @returns {boolean} Whether the domain is supported
- */
-function isDomainSupported(hostname) {
-  return SUPPORTED_DOMAINS.some((pattern) => pattern.test(hostname));
 }
 
 /**

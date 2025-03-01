@@ -18,10 +18,10 @@
 
 /**
  * @const {SelectorsConfig}
- * Complete configuration for element selection
+ * Default configuration for element selection
  * Defines which elements should receive RTL handling and how
  */
-export const SELECTORS = {
+export const DEFAULT_SELECTORS = {
   attributes: [
     { selector: "contenteditable", classes: ["rtl-auto"] },
     { selector: "data-is-streaming", classes: ["rtl-auto"] },
@@ -45,40 +45,42 @@ export const SELECTORS = {
 
 /**
  * Creates a combined CSS selector string for all configured elements
+ * @param {SelectorsConfig} selectors - Configuration for element selection
  * @returns {string} Combined CSS selector targeting all relevant elements
  */
-export function createElementSelector() {
+export function createElementSelector(selectors) {
   return [
-    ...SELECTORS.attributes.map(({ selector }) => `[${selector}]`),
-    ...SELECTORS.tags.map(({ selector }) => selector),
-    ...SELECTORS.classes.map(({ selector }) => `.${selector}`),
+    ...selectors.attributes.map(({ selector }) => `[${selector}]`),
+    ...selectors.tags.map(({ selector }) => selector),
+    ...selectors.classes.map(({ selector }) => `.${selector}`),
   ].join(",");
 }
 
 /**
  * Determines which RTL classes should be applied to a given element
  * @param {HTMLElement} element - The DOM element to check
+ * @param {SelectorsConfig} selectors - Configuration for element selection
  * @returns {string[]} Array of RTL class names to apply
  */
-export function getClassesForElement(element) {
+export function getClassesForElement(element, selectors) {
   let classes = [];
 
   // Check for matching attributes
-  SELECTORS.attributes.forEach(({ selector, classes: selectorClasses }) => {
+  selectors.attributes.forEach(({ selector, classes: selectorClasses }) => {
     if (element.hasAttribute(selector)) {
       classes = classes.concat(selectorClasses);
     }
   });
 
   // Check for matching tags
-  SELECTORS.tags.forEach(({ selector, classes: selectorClasses }) => {
+  selectors.tags.forEach(({ selector, classes: selectorClasses }) => {
     if (element.tagName.toLowerCase() === selector) {
       classes = classes.concat(selectorClasses);
     }
   });
 
   // Check for matching classes
-  SELECTORS.classes.forEach(({ selector, classes: selectorClasses }) => {
+  selectors.classes.forEach(({ selector, classes: selectorClasses }) => {
     if (element.classList.contains(selector)) {
       classes = classes.concat(selectorClasses);
     }

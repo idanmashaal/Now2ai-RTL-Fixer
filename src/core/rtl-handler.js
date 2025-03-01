@@ -4,7 +4,10 @@
  */
 
 import { CSS_CLASSES } from "../config/constants.js";
-import { getClassesForElement } from "../config/selectors.js";
+import {
+  getCurrentDomainConfig,
+  getClassesForElement,
+} from "../config/domains.js";
 
 /**
  * @typedef {WeakMap<Element, Set<string>>} ProcessedElementsMap
@@ -30,7 +33,8 @@ export function applyRTLStyles(element) {
     return;
   }
 
-  const classNames = getClassesForElement(element);
+  const domainConfig = getCurrentDomainConfig();
+  const classNames = getClassesForElement(element, domainConfig.selectors);
   if (!classNames.length) {
     return;
   }

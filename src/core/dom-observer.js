@@ -2,9 +2,11 @@
  * @fileoverview DOM Mutation Observer implementation for RTL Fixer
  * Handles watching for and responding to DOM changes that require RTL processing
  */
-
+import {
+  getCurrentDomainConfig,
+  createElementSelector,
+} from "../config/domains.js";
 import { SELECTORS } from "../config/selectors.js";
-import { createElementSelector } from "../config/selectors.js";
 import { applyRTLStyles, isElementProcessed } from "./rtl-handler.js";
 
 /**
@@ -43,7 +45,8 @@ function processElement(element) {
  * @private
  */
 function processChildElements(container) {
-  const elementSelector = createElementSelector();
+  const domainConfig = getCurrentDomainConfig();
+  const elementSelector = createElementSelector(domainConfig.selectors);
   container.querySelectorAll(elementSelector).forEach((element) => {
     if (!isElementProcessed(element)) {
       applyRTLStyles(element);
@@ -82,11 +85,10 @@ function isDirectionChange(mutation) {
  */
 function handleAttributeMutation(mutation) {
   if (mutation.target instanceof HTMLElement) {
-    // Process the element if it matches our selectors or had direction changes
     const element = mutation.target;
-    const elementSelector = createElementSelector();
+    const domainConfig = getCurrentDomainConfig();
+    const elementSelector = createElementSelector(domainConfig.selectors);
 
-    // If this was a direction-related change or the element matches our selectors
     if (isDirectionChange(mutation) || element.matches(elementSelector)) {
       processElement(element);
     }
@@ -142,6 +144,7 @@ export function initializeObserver() {
 
   try {
     const observer = createObserver();
+    const domainConfig = getCurrentDomainConfig();
 
     // Configure what to observe - expanded to catch more changes
     const observerConfig = {
@@ -149,7 +152,7 @@ export function initializeObserver() {
       subtree: true,
       attributes: true,
       attributeFilter: [
-        ...SELECTORS.attributes.map(({ selector }) => selector),
+        ...domainConfig.selectors.attributes.map(({ selector }) => selector),
         "class",
         "style",
         "dir",

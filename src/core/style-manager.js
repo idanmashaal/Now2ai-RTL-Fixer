@@ -3,9 +3,10 @@
  * Handles creation, injection, and cleanup of CSS styles
  */
 
-import { BRAND } from '../config/constants.js';
-import { CSS_CLASSES } from '../config/constants.js';
-import { SELECTORS } from '../config/selectors.js';
+import { BRAND } from "../config/constants.js";
+import { CSS_CLASSES } from "../config/constants.js";
+import { DEFAULT_SELECTORS } from "../config/selectors.js";
+import { getCurrentDomainConfig } from "../config/domains.js";
 
 /**
  * @typedef {Object} StyleState
@@ -17,7 +18,7 @@ import { SELECTORS } from '../config/selectors.js';
  * @type {StyleState}
  */
 const styleState = {
-  styleElements: new Set()
+  styleElements: new Set(),
 };
 
 /**
@@ -26,30 +27,32 @@ const styleState = {
  * @private
  */
 function generateSelectors() {
-  let cssRules = '';
+  const domainConfig = getCurrentDomainConfig();
+  const selectors = domainConfig.selectors;
+  let cssRules = "";
 
-  Object.entries(SELECTORS).forEach(([type, items]) => {
+  Object.entries(selectors).forEach(([type, items]) => {
     items.forEach(({ selector, classes }) => {
       const selectors = [];
-      
+
       // Build appropriate selector based on type
-      if (type === 'attributes') {
+      if (type === "attributes") {
         selectors.push(`[${selector}]`);
-      } else if (type === 'tags') {
+      } else if (type === "tags") {
         selectors.push(selector);
-      } else if (type === 'classes') {
+      } else if (type === "classes") {
         selectors.push(`.${selector}`);
       }
 
       // Add rules for each class
-      classes.forEach(className => {
+      classes.forEach((className) => {
         const rules = CSS_CLASSES[className].cssRules;
         const cssProps = Object.entries(rules)
-          .filter(([prop]) => prop !== 'dir')
+          .filter(([prop]) => prop !== "dir")
           .map(([prop, value]) => `${prop}: ${value}`)
-          .join(';\n  ');
+          .join(";\n  ");
 
-        cssRules += `\n${selectors.join(',\n')} {\n  ${cssProps}\n}`;
+        cssRules += `\n${selectors.join(",\n")} {\n  ${cssProps}\n}`;
       });
     });
   });
@@ -64,7 +67,7 @@ function generateSelectors() {
  * @private
  */
 function injectStyles(css) {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.id = `${BRAND}-style-${Date.now()}`;
   style.textContent = css;
   document.head.appendChild(style);
@@ -82,7 +85,7 @@ export function initializeStyles() {
     const css = generateSelectors();
     return injectStyles(css);
   } catch (error) {
-    console.error('Failed to initialize styles:', error);
+    console.error("Failed to initialize styles:", error);
     throw error;
   }
 }
@@ -102,13 +105,13 @@ export function addStyles(css) {
  */
 export function removeAllStyles() {
   try {
-    styleState.styleElements.forEach(element => {
+    styleState.styleElements.forEach((element) => {
       element.remove();
     });
     styleState.styleElements.clear();
     return true;
   } catch (error) {
-    console.error('Failed to remove styles:', error);
+    console.error("Failed to remove styles:", error);
     throw error;
   }
 }

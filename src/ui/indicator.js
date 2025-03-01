@@ -3,10 +3,10 @@
  * Manages the visual indicator showing RTL Fixer's active status
  */
 
-import { BRAND } from '../config/constants.js';
-import { DOMAIN_POSITIONS } from '../config/domains.js';
-import { addStyles } from '../core/style-manager.js';
-import { THEME } from '../config/styles.js';
+import { BRAND } from "../config/constants.js";
+import { getCurrentDomainConfig } from "../config/domains.js";
+import { addStyles } from "../core/style-manager.js";
+import { THEME } from "../config/styles.js";
 
 /**
  * @typedef {Object} IndicatorState
@@ -20,7 +20,7 @@ import { THEME } from '../config/styles.js';
  */
 const indicatorState = {
   element: null,
-  styles: null
+  styles: null,
 };
 
 /**
@@ -29,10 +29,7 @@ const indicatorState = {
  * @private
  */
 function getDomainPosition() {
-  const currentDomain = window.location.hostname;
-  return DOMAIN_POSITIONS.find(
-    p => p.domain !== 'default' && new RegExp(p.domain).test(currentDomain)
-  ) || DOMAIN_POSITIONS.find(p => p.domain === 'default');
+  return getCurrentDomainConfig().position;
 }
 
 /**
@@ -43,18 +40,18 @@ function getDomainPosition() {
  */
 function generateIndicatorStyles(position) {
   const positionStyles = [
-    'top:auto',
-    'bottom:auto',
-    'left:auto',
-    'right:auto',
+    "top:auto",
+    "bottom:auto",
+    "left:auto",
+    "right:auto",
     position.top && `top:${position.top}`,
     position.bottom && `bottom:${position.bottom}`,
     position.left && `left:${position.left}`,
     position.right && `right:${position.right}`,
-    position.padding && `padding:${position.padding}`
+    position.padding && `padding:${position.padding}`,
   ]
     .filter(Boolean)
-    .join(';');
+    .join(";");
 
   return `
     #${BRAND}-indicator {
@@ -98,15 +95,15 @@ function generateIndicatorStyles(position) {
  * @private
  */
 function createIndicatorElement() {
-  const indicator = document.createElement('div');
-  const content = document.createElement('div');
-  const link = document.createElement('a');
-  const text = document.createTextNode(' RTL Fixer');
+  const indicator = document.createElement("div");
+  const content = document.createElement("div");
+  const link = document.createElement("a");
+  const text = document.createTextNode(" RTL Fixer");
 
   indicator.id = `${BRAND}-indicator`;
-  link.href = 'https://now2.ai';
-  link.target = '_blank';
-  link.textContent = 'Now2.ai';
+  link.href = "https://now2.ai";
+  link.target = "_blank";
+  link.textContent = "Now2.ai";
 
   content.appendChild(link);
   content.appendChild(text);
@@ -132,7 +129,7 @@ export function showIndicator() {
 
     // Add styles
     const position = getDomainPosition();
-    const styles = generateIndicatorStyles(position.position);
+    const styles = generateIndicatorStyles(position);
     const styleElement = addStyles(styles);
 
     // Update state
@@ -141,7 +138,7 @@ export function showIndicator() {
 
     return indicator;
   } catch (error) {
-    console.error('Failed to show indicator:', error);
+    console.error("Failed to show indicator:", error);
     throw error;
   }
 }
@@ -162,7 +159,7 @@ export function hideIndicator() {
     }
     return true;
   } catch (error) {
-    console.error('Failed to hide indicator:', error);
+    console.error("Failed to hide indicator:", error);
     throw error;
   }
 }
@@ -186,16 +183,16 @@ export function updateIndicatorPosition() {
     }
 
     const position = getDomainPosition();
-    const styles = generateIndicatorStyles(position.position);
-    
+    const styles = generateIndicatorStyles(position);
+
     if (indicatorState.styles) {
       indicatorState.styles.remove();
     }
-    
+
     indicatorState.styles = addStyles(styles);
     return true;
   } catch (error) {
-    console.error('Failed to update indicator position:', error);
+    console.error("Failed to update indicator position:", error);
     throw error;
   }
 }
