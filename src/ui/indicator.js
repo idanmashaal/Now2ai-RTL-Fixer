@@ -223,17 +223,18 @@ export function updateIndicatorPosition() {
 export function makeDraggable(indicator) {
   if (!indicator) return;
 
-  // Add cursor style to indicate it's draggable
-  indicator.style.cursor = "move";
+  // Add cursor style to default, we will mark the drag handle as grab below
+  indicator.style.cursor = "default";
 
   // Add a small drag handle to make it clear it's draggable (optional)
   const handleEl = document.createElement("div");
+  handleEl.className = "drag-handle";
   handleEl.style.position = "absolute";
   handleEl.style.top = "0";
   handleEl.style.right = "0";
   handleEl.style.width = "16px";
   handleEl.style.height = "16px";
-  handleEl.style.cursor = "move";
+  handleEl.style.cursor = "grab";
   handleEl.style.background = "rgba(0,0,0,0.1)";
   handleEl.style.borderRadius = "0 6px 0 6px";
   handleEl.setAttribute("title", "Drag to reposition");
@@ -252,6 +253,10 @@ export function makeDraggable(indicator) {
  * @param {MouseEvent} e - The mousedown event
  */
 function handleMouseDown(e) {
+  // Only allow dragging from the drag handle
+  if (!e.target.classList.contains("drag-handle")) {
+    return;
+  }
   const indicator = e.currentTarget;
 
   // Prevent default to avoid text selection
