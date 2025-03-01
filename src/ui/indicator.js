@@ -3,7 +3,9 @@
  * Manages the visual indicator showing RTL Fixer's active status
  */
 
+import { saveCustomPosition, getCustomPosition } from "../extension/storage.js";
 import { BRAND } from "../config/constants.js";
+import { debounce } from "../utils/utils.js";
 import { getCurrentDomainConfig } from "../config/domains.js";
 import { addStyles } from "../core/style-manager.js";
 import { THEME } from "../config/styles.js";
@@ -21,6 +23,19 @@ import { THEME } from "../config/styles.js";
 const indicatorState = {
   element: null,
   styles: null,
+};
+
+/**
+ * State for tracking dragging
+ */
+const dragState = {
+  isDragging: false,
+  initialX: 0,
+  initialY: 0,
+  initialLeft: 0,
+  initialTop: 0,
+  currentX: 0,
+  currentY: 0,
 };
 
 /**
@@ -136,6 +151,10 @@ export function showIndicator() {
     indicatorState.element = indicator;
     indicatorState.styles = styleElement;
 
+    // Make indicator draggable and apply custom position if available
+    makeDraggable(indicator);
+    applyCustomPosition(indicator);
+
     return indicator;
   } catch (error) {
     console.error("Failed to show indicator:", error);
@@ -194,5 +213,168 @@ export function updateIndicatorPosition() {
   } catch (error) {
     console.error("Failed to update indicator position:", error);
     throw error;
+  }
+}
+
+/**
+ * Makes the indicator element draggable
+ * @param {HTMLElement} indicator - The indicator element to make draggable
+ */
+export function makeDraggable(indicator) {
+  if (!indicator) return;
+
+  // Add cursor style to indicate it's draggable
+  indicator.style.cursor = "move";
+
+  // Add a small drag handle to make it clear it's draggable (optional)
+  const handleEl = document.createElement("div");
+  handleEl.style.position = "absolute";
+  handleEl.style.top = "0";
+  handleEl.style.right = "0";
+  handleEl.style.width = "16px";
+  handleEl.style.height = "16px";
+  handleEl.style.cursor = "move";
+  handleEl.style.background = "rgba(0,0,0,0.1)";
+  handleEl.style.borderRadius = "0 6px 0 6px";
+  handleEl.setAttribute("title", "Drag to reposition");
+
+  indicator.appendChild(handleEl);
+
+  // Mouse down event - start dragging
+  indicator.addEventListener("mousedown", handleMouseDown);
+
+  // Add data attribute to mark as draggable
+  indicator.setAttribute("data-draggable", "true");
+}
+
+/**
+ * Handles the start of dragging
+ * @param {MouseEvent} e - The mousedown event
+ */
+function handleMouseDown(e) {
+  const indicator = e.currentTarget;
+
+  // Prevent default to avoid text selection
+  e.preventDefault();
+
+  // Get the actual screen position
+  const rect = indicator.getBoundingClientRect();
+
+  // Initialize dragging state
+  dragState.isDragging = true;
+  dragState.initialX = e.clientX;
+  dragState.initialY = e.clientY;
+
+  // Simply use the current screen coordinates
+  dragState.initialTop = rect.top;
+  dragState.initialLeft = rect.left;
+
+  // Apply consistent positioning using screen coordinates
+  indicator.style.position = "fixed";
+  indicator.style.top = rect.top + "px";
+  indicator.style.left = rect.left + "px";
+  indicator.style.right = "auto";
+  indicator.style.bottom = "auto";
+
+  // Add global event listeners
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
+
+  // Add dragging class
+  indicator.classList.add("dragging");
+}
+
+/**
+ * Handles mouse movement during dragging
+ * @param {MouseEvent} e - The mousemove event
+ */
+function handleMouseMove(e) {
+  if (!dragState.isDragging) return;
+
+  // Calculate the new position
+  const deltaX = e.clientX - dragState.initialX;
+  const deltaY = e.clientY - dragState.initialY;
+
+  const newLeft = dragState.initialLeft + deltaX;
+  const newTop = dragState.initialTop + deltaY;
+
+  // Get the indicator element
+  const indicator = document.getElementById(`${BRAND}-indicator`);
+  if (!indicator) return;
+
+  // Apply new position with boundary checking
+  const rect = indicator.getBoundingClientRect();
+
+  // Ensure indicator stays within viewport bounds
+  const maxLeft = window.innerWidth - rect.width;
+  const maxTop = window.innerHeight - rect.height;
+
+  indicator.style.left = Math.max(0, Math.min(newLeft, maxLeft)) + "px";
+  indicator.style.top = Math.max(0, Math.min(newTop, maxTop)) + "px";
+}
+
+/**
+ * Handles the end of dragging
+ * @param {MouseEvent} e - The mouseup event
+ */
+const handleMouseUp = debounce(async (e) => {
+  if (!dragState.isDragging) return;
+
+  // Get the indicator element
+  const indicator = document.getElementById(`${BRAND}-indicator`);
+  if (!indicator) return;
+
+  // Reset dragging state
+  dragState.isDragging = false;
+
+  // Remove global event listeners
+  document.removeEventListener("mousemove", handleMouseMove);
+  document.removeEventListener("mouseup", handleMouseUp);
+
+  // Remove dragging class
+  indicator.classList.remove("dragging");
+
+  // Get the final position
+  const computedStyle = window.getComputedStyle(indicator);
+  const position = {
+    top: computedStyle.top,
+    left: computedStyle.left,
+    right: "auto",
+    bottom: "auto",
+  };
+
+  // Save the position
+  const domain = window.location.hostname;
+  await saveCustomPosition(domain, position);
+
+  console.log("Saved indicator position:", position);
+}, 100);
+
+/**
+ * Gets the custom position for the current domain, or falls back to default
+ * @param {Object} defaultPosition - Default position to use if no custom position found
+ * @returns {Promise<Object>} Position object
+ */
+export async function getIndicatorPosition(defaultPosition) {
+  const domain = window.location.hostname;
+  const customPosition = await getCustomPosition(domain);
+  return customPosition || defaultPosition;
+}
+
+/**
+ * Updates the indicator position with a custom position if available
+ * @param {HTMLElement} indicator - The indicator element
+ */
+export async function applyCustomPosition(indicator) {
+  if (!indicator) return;
+
+  const domain = window.location.hostname;
+  const customPosition = await getCustomPosition(domain);
+
+  if (customPosition) {
+    // Apply custom position
+    Object.entries(customPosition).forEach(([prop, value]) => {
+      indicator.style[prop] = value;
+    });
   }
 }
