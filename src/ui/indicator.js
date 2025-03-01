@@ -116,7 +116,7 @@ function createIndicatorElement() {
   const text = document.createTextNode(" RTL Fixer");
 
   indicator.id = `${BRAND}-indicator`;
-  link.href = "https://now2.ai";
+  link.href = "https://go.now2.ai/he-ext-indicator";
   link.target = "_blank";
   link.textContent = "Now2.ai";
 
