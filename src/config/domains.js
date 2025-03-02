@@ -45,9 +45,8 @@ export const SUPPORTED_DOMAINS = [
   {
     domain: "^(?:[^.]+\\.)?claude\\.ai$",
     position: {
-      top: "3px",
-      right: "auto",
-      left: "346px", // ~18% of 1920px
+      top: "9px",
+      right: "146px",
       padding: DEFAULT_POSITION.padding,
     },
     selectors: {
@@ -67,9 +66,8 @@ export const SUPPORTED_DOMAINS = [
   {
     domain: "^notebooklm\\.google\\.com$",
     position: {
-      top: "7px",
-      right: "auto",
-      left: "1265px", // ~66% of 1920px
+      top: "12px",
+      right: "420px",
       padding: DEFAULT_POSITION.padding,
     },
     selectors: {
@@ -114,9 +112,8 @@ export const SUPPORTED_DOMAINS = [
   {
     domain: "^gemini\\.google\\.com$",
     position: {
-      top: "910px", // ~84% of 1080px
-      right: "auto",
-      left: "16px", // ~0.8% of 1920px
+      top: "16px",
+      right: "122px",
       padding: DEFAULT_POSITION.padding,
     },
     selectors: {
@@ -140,9 +137,8 @@ export const SUPPORTED_DOMAINS = [
   {
     domain: "^(?:[^.]+\\.)?perplexity\\.ai$",
     position: {
-      top: "888px", // ~82% of 1080px
-      right: "auto",
-      left: "13px", // ~0.7% of 1920px
+      top: "18px",
+      right: "36px",
       padding: DEFAULT_POSITION.padding,
     },
     selectors: {
@@ -162,9 +158,8 @@ export const SUPPORTED_DOMAINS = [
   {
     domain: "^(?:[^.]+\\.)?chatgpt\\.com$",
     position: {
-      top: "7px",
-      right: "auto",
-      left: "1534px", // ~80% of 1920px
+      top: "8px",
+      right: "195px",
       padding: DEFAULT_POSITION.padding,
     },
     selectors: {
