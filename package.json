@@ -1,7 +1,7 @@
 {
-  "name": "now2ai-rtl-fixer-extension",
-  "version": "1.0.6",
-  "description": "Now2.ai RTL text handling fix for AI chat platforms",
+  "name": "now2ai-rtl-fixer-chrome-extension",
+  "version": "1.0.7",
+  "description": "Now2.ai RTL Fixer Chrome Extension - Automatically fixes RTL text handling in AI chat platforms",
   "scripts": {
     "dev:build": "webpack --mode development",
     "dev:package": "webpack --mode development --env package",
@@ -9,7 +9,7 @@
     "prod:build": "webpack --mode production",
     "prod:package": "webpack --mode production --env package"
   },
-  "author": "Idan Mashaal Now2.ai",
+  "author": "Idan Mashaal @ Now2.ai",
   "license": "GPL-3.0",
   "devDependencies": {
     "@babel/core": "^7.26.9",

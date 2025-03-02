@@ -16,10 +16,7 @@
  */
 const DEFAULT_SETTINGS = {
   enabled: true,
-  preferences: {
-    autoEnable: true,
-    showIndicator: true,
-  },
+  preferences: {},
   excludedDomains: [],
 };
 
