@@ -3,6 +3,8 @@
  * Handles the popup UI and communicates with the content script and storage
  */
 
+import { VERSION, DEBUG, ENV } from "./config/constants.js";
+
 // Get DOM elements
 const siteToggle = document.getElementById("site-toggle");
 const statusText = document.getElementById("status-text");
@@ -12,6 +14,7 @@ const refreshNotice = document.getElementById("refresh-notice");
 const refreshLink = document.getElementById("refresh-link");
 const resetPosition = document.getElementById("reset-position");
 const resetPositionLink = document.getElementById("reset-position-link");
+const footerElement = document.getElementById("footer-text");
 
 // Load the list of supported domain patterns from domains config
 import { isDomainSupported } from "./config/domains.js";
@@ -227,9 +230,30 @@ async function resetIndicatorPos() {
   }
 }
 
+/**
+ * Updates the footer to display version and debug information
+ */
+function updateFooter() {
+  // Create the version info text
+  let infoText = `v${VERSION}`;
+
+  // Add env info and debug status only for development builds
+  if (ENV === "development") {
+    const debugText = DEBUG ? "DEBUG=ON" : "DEBUG=OFF";
+    infoText += ` | DEV | ${debugText}`;
+  }
+
+  // Create the footer content
+  footerElement.innerHTML = `<a href="https://go.now2.ai/he-ext-popup" target="_blank">Visit Now2.ai</a> | ${infoText}`;
+}
+
 // Initialize when popup is loaded
 document.addEventListener("DOMContentLoaded", () => {
+  // First initialize the popup
   initializePopup();
+
+  // Update footer with version and debug info
+  updateFooter();
 
   // Set up refresh link click handler
   refreshLink.addEventListener("click", refreshPage);

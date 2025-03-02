@@ -8,7 +8,7 @@ import {
   getCustomPosition,
   clearCustomPosition,
 } from "../extension/storage.js";
-import { BRAND } from "../config/constants.js";
+import { BRAND, ENV } from "../config/constants.js";
 import { debounce, debugLog } from "../utils/utils.js";
 import { getCurrentDomainConfig } from "../config/domains.js";
 import { addStyles } from "../core/style-manager.js";
@@ -157,7 +157,9 @@ function createIndicatorElement() {
   const indicator = document.createElement("div");
   const content = document.createElement("div");
   const link = document.createElement("a");
-  const text = document.createTextNode(" RTL Fixer");
+  const text = document.createTextNode(
+    " RTL Fixer" + (ENV === "development" ? " (Dev)" : "")
+  );
 
   indicator.id = `${BRAND}-indicator`;
   link.href = "https://go.now2.ai/he-ext-indicator";

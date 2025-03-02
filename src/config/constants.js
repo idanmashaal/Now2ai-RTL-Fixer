@@ -3,16 +3,22 @@
  * Defines brand information, versioning, and CSS rules for RTL text handling
  */
 
-/** @const {string} Brand identifier used throughout the extension */
-export const BRAND = "now2ai";
+/**
+ * @const {boolean} Environment specific settings
+ * Set automatically based on build environment
+ */
+export const ENV = typeof __ENV__ !== "undefined" ? __ENV__ : "development";
+export const DEBUG = typeof __DEBUG__ !== "undefined" ? __DEBUG__ : false;
 
-/** @const {string} Current version of the extension */
-export const VERSION = "1.0.0";
+/** @const {string} Brand identifier used throughout the extension */
+export const BRAND = "now2ai" + (ENV === "development" ? "-dev" : "");
 
 /**
- * @const {boolean} Enable debug logging throughout the extension
+ * @const {string} Current version of the extension
+ * This is set during build from package.json
  */
-export const DEBUG = true; // Set to false in production
+export const VERSION =
+  typeof __VERSION__ !== "undefined" ? __VERSION__ : "1.0.0";
 
 /**
  * @const {string} Unique namespace for this instance
