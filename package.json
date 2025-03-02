@@ -1,6 +1,6 @@
 {
   "name": "now2ai-rtl-fixer-extension",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Now2.ai RTL text handling fix for AI chat platforms",
   "scripts": {
     "dev:build": "webpack --mode development",
