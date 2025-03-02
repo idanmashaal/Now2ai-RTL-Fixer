@@ -405,7 +405,7 @@ const handleMouseUp = debounce(async (e) => {
   const domain = window.location.hostname;
   await saveCustomPosition(domain, position);
 
-  console.log("Saved indicator position:", position);
+  //console.log("Saved indicator position:", position);
 }, 100);
 
 /**

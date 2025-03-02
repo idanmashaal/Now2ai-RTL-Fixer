@@ -55,7 +55,7 @@ async function sendMessageToContentScript(tabId, message) {
   try {
     return await chrome.tabs.sendMessage(tabId, message);
   } catch (error) {
-    console.log(
+    console.error(
       "Could not connect to content script. This is normal on unsupported sites."
     );
     return { success: false, error: "Connection failed" };
