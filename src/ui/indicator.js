@@ -58,16 +58,56 @@ function getDomainPosition() {
  * @private
  */
 function generateIndicatorStyles(position) {
+  // Convert default position values to percentage units if they're in pixels
+  const convertedPosition = { ...position };
+
+  // Check if default positions are in pixels and convert to percentages
+  if (
+    typeof convertedPosition.top === "string" &&
+    convertedPosition.top.endsWith("px")
+  ) {
+    const defaultPercent =
+      (parseInt(convertedPosition.top) / window.innerHeight) * 100;
+    convertedPosition.top = `${defaultPercent}%`;
+  }
+
+  if (
+    typeof convertedPosition.right === "string" &&
+    convertedPosition.right.endsWith("px")
+  ) {
+    const defaultPercent =
+      (parseInt(convertedPosition.right) / window.innerWidth) * 100;
+    convertedPosition.right = `${defaultPercent}%`;
+  }
+
+  if (
+    typeof convertedPosition.bottom === "string" &&
+    convertedPosition.bottom.endsWith("px")
+  ) {
+    const defaultPercent =
+      (parseInt(convertedPosition.bottom) / window.innerHeight) * 100;
+    convertedPosition.bottom = `${defaultPercent}%`;
+  }
+
+  if (
+    typeof convertedPosition.left === "string" &&
+    convertedPosition.left.endsWith("px")
+  ) {
+    const defaultPercent =
+      (parseInt(convertedPosition.left) / window.innerWidth) * 100;
+    convertedPosition.left = `${defaultPercent}%`;
+  }
+
   const positionStyles = [
     "top:auto",
     "bottom:auto",
     "left:auto",
     "right:auto",
-    position.top && `top:${position.top}`,
-    position.bottom && `bottom:${position.bottom}`,
-    position.left && `left:${position.left}`,
-    position.right && `right:${position.right}`,
-    position.padding && `padding:${position.padding}`,
+    convertedPosition.top && `top:${convertedPosition.top}`,
+    convertedPosition.bottom && `bottom:${convertedPosition.bottom}`,
+    convertedPosition.left && `left:${convertedPosition.left}`,
+    convertedPosition.right && `right:${convertedPosition.right}`,
+    convertedPosition.padding && `padding:${convertedPosition.padding}`,
   ]
     .filter(Boolean)
     .join(";");
@@ -343,14 +383,23 @@ const handleMouseUp = debounce(async (e) => {
   // Remove dragging class
   indicator.classList.remove("dragging");
 
-  // Get the final position
-  const computedStyle = window.getComputedStyle(indicator);
+  // Calculate percentage-based positions
+  const rect = indicator.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
   const position = {
-    top: computedStyle.top,
-    left: computedStyle.left,
+    top: `${(rect.top / viewportHeight) * 100}%`,
+    left: `${(rect.left / viewportWidth) * 100}%`,
     right: "auto",
     bottom: "auto",
   };
+
+  // Apply percentage-based positions directly to the indicator
+  indicator.style.top = position.top;
+  indicator.style.left = position.left;
+  indicator.style.right = position.right;
+  indicator.style.bottom = position.bottom;
 
   // Save the position
   const domain = window.location.hostname;
@@ -381,7 +430,8 @@ export async function applyCustomPosition(indicator) {
   const customPosition = await getCustomPosition(domain);
 
   if (customPosition) {
-    // Apply custom position
+    // Apply custom position - ensure we're using the stored values directly
+    // which should now be in responsive units
     Object.entries(customPosition).forEach(([prop, value]) => {
       indicator.style[prop] = value;
     });
