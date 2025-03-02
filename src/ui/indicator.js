@@ -3,7 +3,11 @@
  * Manages the visual indicator showing RTL Fixer's active status
  */
 
-import { saveCustomPosition, getCustomPosition } from "../extension/storage.js";
+import {
+  saveCustomPosition,
+  getCustomPosition,
+  clearCustomPosition,
+} from "../extension/storage.js";
 import { BRAND } from "../config/constants.js";
 import { debounce } from "../utils/utils.js";
 import { getCurrentDomainConfig } from "../config/domains.js";
@@ -381,5 +385,42 @@ export async function applyCustomPosition(indicator) {
     Object.entries(customPosition).forEach(([prop, value]) => {
       indicator.style[prop] = value;
     });
+  }
+}
+
+/**
+ * Resets the indicator to its default position
+ * @param {HTMLElement} indicator - The indicator element (optional, will find by ID if not provided)
+ * @returns {Promise<boolean>} Whether reset was successful
+ */
+export async function resetIndicatorPosition(indicator = null) {
+  try {
+    const domain = window.location.hostname;
+
+    // Clear saved position
+    await clearCustomPosition(domain);
+
+    // Find indicator if not provided
+    indicator = indicator || document.getElementById(`${BRAND}-indicator`);
+    if (!indicator) return false;
+
+    // Remove inline positioning
+    indicator.style.top = "";
+    indicator.style.left = "";
+    indicator.style.right = "";
+    indicator.style.bottom = "";
+
+    // Apply default position
+    const position = getDomainPosition();
+    Object.entries(position).forEach(([prop, value]) => {
+      if (value) {
+        indicator.style[prop] = value;
+      }
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error resetting indicator position:", error);
+    return false;
   }
 }

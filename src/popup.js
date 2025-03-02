@@ -10,6 +10,8 @@ const toggleContainer = document.getElementById("toggle-container");
 const unsupportedContainer = document.getElementById("unsupported-container");
 const refreshNotice = document.getElementById("refresh-notice");
 const refreshLink = document.getElementById("refresh-link");
+const resetPosition = document.getElementById("reset-position");
+const resetPositionLink = document.getElementById("reset-position-link");
 
 // Load the list of supported domain patterns from domains config
 import { isDomainSupported } from "./config/domains.js";
@@ -38,6 +40,9 @@ function updateUI(isEnabled, showRefreshNotice = false) {
   // Make toggle container visible with a fade in effect
   toggleContainer.style.opacity = "1";
   toggleContainer.style.transition = "opacity 0.2s ease";
+
+  // Show or hide reset position option
+  resetPosition.style.display = isEnabled ? "block" : "none";
 }
 
 /**
@@ -198,10 +203,37 @@ async function initializePopup() {
   }
 }
 
+// Function to handle resetting the indicator position
+async function resetIndicatorPos() {
+  if (!currentTab || !currentHostname) return;
+
+  try {
+    // Send message to content script to reset indicator position
+    await sendMessageToContentScript(currentTab.id, {
+      action: "resetPosition",
+    });
+
+    // Show success message or feedback
+    resetPositionLink.textContent = "Reset successful!";
+    setTimeout(() => {
+      resetPositionLink.textContent = "Reset to default";
+    }, 2000);
+  } catch (error) {
+    console.error("Error resetting position:", error);
+    resetPositionLink.textContent = "Reset failed";
+    setTimeout(() => {
+      resetPositionLink.textContent = "Reset to default";
+    }, 2000);
+  }
+}
+
 // Initialize when popup is loaded
 document.addEventListener("DOMContentLoaded", () => {
   initializePopup();
 
   // Set up refresh link click handler
   refreshLink.addEventListener("click", refreshPage);
+
+  // Set up reset position link click handler
+  resetPositionLink.addEventListener("click", resetIndicatorPos);
 });

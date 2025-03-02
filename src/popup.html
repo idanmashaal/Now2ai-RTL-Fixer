@@ -152,6 +152,28 @@
       cursor: pointer;
     }
 
+    /* Reset position text */
+    .reset-position {
+      font-size: 12px;
+      margin-top: 8px;
+      color: #666;
+    }
+
+    .reset-link {
+      color: #0071E3;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .reset-link {
+        color: #66b3ff;
+      }
+      .reset-position {
+        color: #aaa;
+      }
+    }
+
     /* Footer */
     .footer {
       margin-top: 24px;
@@ -207,6 +229,9 @@
       <p class="status" id="status-text">RTL Fixer is enabled for this site.</p>
       <p class="refresh-notice" id="refresh-notice" style="display: none;">
         For best results, <span class="refresh-link" id="refresh-link">refresh the page</span>.
+      </p>
+      <p class="reset-position" id="reset-position" style="display: none;">
+        Indicator position: <span class="reset-link" id="reset-position-link">Reset to default</span>
       </p>
     </div>
 

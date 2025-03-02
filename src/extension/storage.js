@@ -30,12 +30,6 @@ const DEFAULT_SETTINGS = {
 const StorageKeys = {
   SETTINGS: "rtl_fixer_settings",
   LAST_ACTIVE: "rtl_fixer_last_active",
-};
-/**
- * Storage key for saving custom indicator positions
- * @enum {string}
- */
-const PositionStorageKey = {
   CUSTOM_POSITIONS: "rtl_fixer_indicator_positions",
 };
 
@@ -170,10 +164,8 @@ export async function resetSettings() {
  */
 export async function getCustomPosition(domain) {
   try {
-    const result = await chrome.storage.sync.get(
-      PositionStorageKey.CUSTOM_POSITIONS
-    );
-    const positions = result[PositionStorageKey.CUSTOM_POSITIONS] || {};
+    const result = await chrome.storage.sync.get(StorageKeys.CUSTOM_POSITIONS);
+    const positions = result[StorageKeys.CUSTOM_POSITIONS] || {};
     return positions[domain] || null;
   } catch (error) {
     console.error("Failed to get custom position:", error);
@@ -190,17 +182,15 @@ export async function getCustomPosition(domain) {
 export async function saveCustomPosition(domain, position) {
   try {
     // Get current positions
-    const result = await chrome.storage.sync.get(
-      PositionStorageKey.CUSTOM_POSITIONS
-    );
-    let positions = result[PositionStorageKey.CUSTOM_POSITIONS] || {};
+    const result = await chrome.storage.sync.get(StorageKeys.CUSTOM_POSITIONS);
+    let positions = result[StorageKeys.CUSTOM_POSITIONS] || {};
 
     // Update position for domain
     positions[domain] = position;
 
     // Save updated positions
     await chrome.storage.sync.set({
-      [PositionStorageKey.CUSTOM_POSITIONS]: positions,
+      [StorageKeys.CUSTOM_POSITIONS]: positions,
     });
 
     return true;
@@ -218,10 +208,8 @@ export async function saveCustomPosition(domain, position) {
 export async function clearCustomPosition(domain) {
   try {
     // Get current positions
-    const result = await chrome.storage.sync.get(
-      PositionStorageKey.CUSTOM_POSITIONS
-    );
-    let positions = result[PositionStorageKey.CUSTOM_POSITIONS] || {};
+    const result = await chrome.storage.sync.get(StorageKeys.CUSTOM_POSITIONS);
+    let positions = result[StorageKeys.CUSTOM_POSITIONS] || {};
 
     // Remove position for domain if it exists
     if (positions[domain]) {
@@ -229,7 +217,7 @@ export async function clearCustomPosition(domain) {
 
       // Save updated positions
       await chrome.storage.sync.set({
-        [PositionStorageKey.CUSTOM_POSITIONS]: positions,
+        [StorageKeys.CUSTOM_POSITIONS]: positions,
       });
     }
 

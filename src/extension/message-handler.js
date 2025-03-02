@@ -3,10 +3,14 @@
  * Manages communication between background script and content script
  */
 
-import { initializeObserver, stopObserver } from '../core/dom-observer.js';
-import { showIndicator, hideIndicator } from '../ui/indicator.js';
-import { initializeStyles, removeAllStyles } from '../core/style-manager.js';
-import { excludeDomain, includeDomain } from '../extension/storage.js';
+import { initializeObserver, stopObserver } from "../core/dom-observer.js";
+import {
+  showIndicator,
+  hideIndicator,
+  resetIndicatorPosition,
+} from "../ui/indicator.js";
+import { initializeStyles, removeAllStyles } from "../core/style-manager.js";
+import { excludeDomain, includeDomain } from "../extension/storage.js";
 
 /**
  * @typedef {Object} MessageResponse
@@ -26,10 +30,28 @@ function handleEnable() {
     showIndicator();
     return { success: true };
   } catch (error) {
-    console.error('Failed to enable RTL Fixer:', error);
+    console.error("Failed to enable RTL Fixer:", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Handles reset position of the indicator
+ * @returns {MessageResponse} Operation result
+ * @private
+ */
+function handleResetPosition() {
+  try {
+    resetIndicatorPosition();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to reset indicator position:", error);
+    return {
+      success: false,
+      error: error.message,
     };
   }
 }
@@ -46,10 +68,10 @@ function handleDisable() {
     hideIndicator();
     return { success: true };
   } catch (error) {
-    console.error('Failed to disable RTL Fixer:', error);
+    console.error("Failed to disable RTL Fixer:", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 }
@@ -65,37 +87,40 @@ export function initializeMessageHandling() {
       let response;
 
       switch (message.action) {
-        case 'enable':
+        case "enable":
           response = handleEnable();
           break;
-        case 'disable':
+        case "disable":
           response = handleDisable();
           break;
-        case 'toggle':
+        case "toggle":
           // Get current state
           const isCurrentlyActive = stopObserver();
-          
+
           // Toggle and update storage
           if (isCurrentlyActive) {
             response = handleDisable();
             const hostname = window.location.hostname;
             // Save disabled state for this domain
-            excludeDomain(hostname).catch(err => 
-              console.error('Failed to update domain settings:', err)
+            excludeDomain(hostname).catch((err) =>
+              console.error("Failed to update domain settings:", err)
             );
           } else {
             response = handleEnable();
             const hostname = window.location.hostname;
             // Save enabled state for this domain
-            includeDomain(hostname).catch(err => 
-              console.error('Failed to update domain settings:', err)
+            includeDomain(hostname).catch((err) =>
+              console.error("Failed to update domain settings:", err)
             );
           }
+          break;
+        case "resetPosition":
+          response = handleResetPosition();
           break;
         default:
           response = {
             success: false,
-            error: `Unknown action: ${message.action}`
+            error: `Unknown action: ${message.action}`,
           };
       }
 
@@ -103,7 +128,7 @@ export function initializeMessageHandling() {
       return true; // Keep message channel open for async response
     });
   } catch (error) {
-    console.error('Failed to initialize message handling:', error);
+    console.error("Failed to initialize message handling:", error);
     throw error;
   }
 }
