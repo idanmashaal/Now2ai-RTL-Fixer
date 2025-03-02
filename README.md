@@ -27,7 +27,7 @@
 
 ### From Chrome Web Store
 
-1. Visit the [Chrome Web Store](https://chrome.google.com/webstore) 🔴 *(link to be added when published)*
+1. Visit the [Chrome Web Store]([https://chrome.google.com/webstore](https://go.now2.ai/rtl-fixer-github)?from=github)
 2. Search for "Now2.ai RTL Fixer"
 3. Click "Add to Chrome"
 
