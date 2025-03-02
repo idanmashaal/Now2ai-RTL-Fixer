@@ -9,7 +9,7 @@ import {
   clearCustomPosition,
 } from "../extension/storage.js";
 import { BRAND } from "../config/constants.js";
-import { debounce } from "../utils/utils.js";
+import { debounce, debugLog } from "../utils/utils.js";
 import { getCurrentDomainConfig } from "../config/domains.js";
 import { addStyles } from "../core/style-manager.js";
 import { THEME } from "../config/styles.js";
@@ -383,12 +383,20 @@ const handleMouseUp = debounce(async (e) => {
   // Remove dragging class
   indicator.classList.remove("dragging");
 
-  // Calculate percentage-based positions
+  // Get current pixel positions first
   const rect = indicator.getBoundingClientRect();
+  const pixelPosition = {
+    top: `${Math.round(rect.top)}px`,
+    left: `${Math.round(rect.left)}px`,
+    right: "auto",
+    bottom: "auto",
+  };
+
+  // Calculate percentage-based positions
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  const position = {
+  const percentagePosition = {
     top: `${(rect.top / viewportHeight) * 100}%`,
     left: `${(rect.left / viewportWidth) * 100}%`,
     right: "auto",
@@ -396,16 +404,20 @@ const handleMouseUp = debounce(async (e) => {
   };
 
   // Apply percentage-based positions directly to the indicator
-  indicator.style.top = position.top;
-  indicator.style.left = position.left;
-  indicator.style.right = position.right;
-  indicator.style.bottom = position.bottom;
+  indicator.style.top = percentagePosition.top;
+  indicator.style.left = percentagePosition.left;
+  indicator.style.right = percentagePosition.right;
+  indicator.style.bottom = percentagePosition.bottom;
 
-  // Save the position
+  // Save both positions (pixels for reference, percentages for use)
   const domain = window.location.hostname;
-  await saveCustomPosition(domain, position);
+  await saveCustomPosition(domain, pixelPosition);
 
-  //console.log("Saved indicator position:", position);
+  // Enhanced console log with both pixels and percentages
+  debugLog(`Saved indicator position for ${domain}:`, {
+    pixels: pixelPosition,
+    percentage: percentagePosition,
+  });
 }, 100);
 
 /**
@@ -427,14 +439,25 @@ export async function applyCustomPosition(indicator) {
   if (!indicator) return;
 
   const domain = window.location.hostname;
-  const customPosition = await getCustomPosition(domain);
+  const positionData = await getCustomPosition(domain);
 
-  if (customPosition) {
+  if (positionData) {
+    // Check if we have new format (with percentage/pixels) or old format
+    const customPosition = positionData.percentage || positionData;
+
     // Apply custom position - ensure we're using the stored values directly
     // which should now be in responsive units
     Object.entries(customPosition).forEach(([prop, value]) => {
       indicator.style[prop] = value;
     });
+
+    // Log the pixel values for reference
+    if (positionData.pixels) {
+      debugLog(
+        `Reference position (pixels) for ${domain}:`,
+        positionData.pixels
+      );
+    }
   }
 }
 
@@ -468,6 +491,7 @@ export async function resetIndicatorPosition(indicator = null) {
       }
     });
 
+    debugLog("Reset to default position:", position);
     return true;
   } catch (error) {
     console.error("Error resetting indicator position:", error);

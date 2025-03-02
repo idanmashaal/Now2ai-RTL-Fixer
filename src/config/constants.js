@@ -7,7 +7,12 @@
 export const BRAND = "now2ai";
 
 /** @const {string} Current version of the extension */
-export const VERSION = "1.0";
+export const VERSION = "1.0.0";
+
+/**
+ * @const {boolean} Enable debug logging throughout the extension
+ */
+export const DEBUG = true; // Set to false in production
 
 /**
  * @const {string} Unique namespace for this instance

@@ -3,6 +3,18 @@
  * Provides helper functions used across the extension
  */
 
+import { DEBUG } from "../config/constants.js";
+
+/**
+ * Logs debug messages only when DEBUG is enabled
+ * @param {...any} args - Arguments to pass to console.log
+ */
+export function debugLog(...args) {
+  if (DEBUG) {
+    console.log("[RTL Fixer Debug]", ...args);
+  }
+}
+
 /**
  * Tests if a string contains RTL characters
  * @param {string} text - Text to test
@@ -16,7 +28,7 @@ export function hasRTLCharacters(text) {
     /[\uFE70-\uFEFC]/, // Arabic presentation forms-B
   ];
 
-  return rtlRanges.some(range => range.test(text));
+  return rtlRanges.some((range) => range.test(text));
 }
 
 /**
@@ -58,7 +70,7 @@ export function safeRemoveElement(elementId) {
  * @returns {HTMLStyleElement} The created style element
  */
 export function createStyleElement(css, id) {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.id = id;
   style.textContent = css;
   return style;
@@ -103,11 +115,11 @@ export function safeAddEventListener(element, event, handler, options = {}) {
       try {
         element.removeEventListener(event, handler, options);
       } catch (error) {
-        console.error('Error removing event listener:', error);
+        console.error("Error removing event listener:", error);
       }
     };
   } catch (error) {
-    console.error('Error adding event listener:', error);
+    console.error("Error adding event listener:", error);
     return () => {}; // Return no-op cleanup function
   }
 }
@@ -120,22 +132,22 @@ export function safeAddEventListener(element, event, handler, options = {}) {
  */
 export function getEffectiveDirection(element) {
   // Check explicit direction
-  const dirAttr = element.getAttribute('dir');
+  const dirAttr = element.getAttribute("dir");
   if (dirAttr) {
     return dirAttr;
   }
 
   // Check computed style
   const computedDir = getComputedDirection(element);
-  if (computedDir !== 'ltr') {
+  if (computedDir !== "ltr") {
     return computedDir;
   }
 
   // Check text content
-  const text = element.textContent || '';
+  const text = element.textContent || "";
   if (hasRTLCharacters(text)) {
-    return 'rtl';
+    return "rtl";
   }
 
-  return 'ltr';
+  return "ltr";
 }

@@ -181,11 +181,12 @@ export async function getCustomPosition(domain) {
  */
 export async function saveCustomPosition(domain, position) {
   try {
-    // Convert pixels to percentages before saving
+    // Store original pixel values for reference
+    const pixelPosition = { ...position };
+
+    // Convert pixels to percentages for responsive positioning
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-
-    // Create a copy of position with converted values
     const convertedPosition = { ...position };
 
     // Convert top/bottom/left/right to percentages if they exist and are in pixels
@@ -213,8 +214,11 @@ export async function saveCustomPosition(domain, position) {
     const result = await chrome.storage.sync.get(StorageKeys.CUSTOM_POSITIONS);
     let positions = result[StorageKeys.CUSTOM_POSITIONS] || {};
 
-    // Update position for domain
-    positions[domain] = convertedPosition;
+    // Update position for domain, storing both formats
+    positions[domain] = {
+      percentage: convertedPosition, // Use this for rendering (responsive)
+      pixels: pixelPosition, // Store this for reference only
+    };
 
     // Save updated positions
     await chrome.storage.sync.set({
