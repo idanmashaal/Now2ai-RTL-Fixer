@@ -164,8 +164,12 @@ export const SUPPORTED_DOMAINS = [
     },
     selectors: {
       attributes: [{ selector: "contenteditable", classes: ["rtl-auto"] }],
-      tags: [],
-      classes: [],
+      tags: [{ selector: "math", classes: ["ltr-force"] }],
+      classes: [
+        { selector: "katex", classes: ["ltr-force"] },
+        { selector: "katex-mathml", classes: ["ltr-force"] },
+        { selector: "katex-html", classes: ["ltr-force"] },
+      ],
     },
   },
   {
