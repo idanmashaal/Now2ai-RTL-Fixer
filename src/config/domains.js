@@ -163,19 +163,9 @@ export const SUPPORTED_DOMAINS = [
       padding: DEFAULT_POSITION.padding,
     },
     selectors: {
-      attributes: [
-        { selector: "contenteditable", classes: ["rtl-auto"] },
-        { selector: "data-start", classes: ["rtl-auto"] },
-      ],
-      tags: [
-        { selector: "textarea", classes: ["rtl-auto"] },
-        { selector: "article", classes: ["rtl-auto"] },
-      ],
-      classes: [
-        { selector: "grid", classes: ["rtl-auto"] },
-        { selector: "flex", classes: ["rtl-auto"] },
-        { selector: "result-streaming", classes: ["rtl-auto"] },
-      ],
+      attributes: [{ selector: "contenteditable", classes: ["rtl-auto"] }],
+      tags: [],
+      classes: [],
     },
   },
   {
