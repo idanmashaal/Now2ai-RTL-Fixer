@@ -5,7 +5,7 @@
 
 ## Overview
 
-<a href="https://go.now2.ai/?from=github" target="_blank">Now2.ai</a> RTL Fixer is a Chrome extension that automatically fixes RTL (Right-to-Left) text handling in AI chat platforms. If you've ever tried typing Hebrew or other RTL languages in AI assistants, you've likely encountered issues with text alignment, mixed language display, and overall text direction. This extension solves these problems seamlessly.
+[Now2.ai](https://go.now2.ai/?from=github) RTL Fixer is a Chrome extension that automatically fixes RTL (Right-to-Left) text handling in AI chat platforms. If you've ever tried typing Hebrew or other RTL languages in AI assistants, you've likely encountered issues with text alignment, mixed language display, and overall text direction. This extension solves these problems seamlessly.
 
 ## Supported Platforms
 
@@ -27,7 +27,7 @@
 
 ### From Chrome Web Store
 
-1. Visit the <a href="https://go.now2.ai/rtl-fixer-chrome-web-store?from=github" target="_blank">Chrome Web Store</a>
+1. Visit the [Chrome Web Store](https://go.now2.ai/rtl-fixer-chrome-web-store?from=github)
 2. Search for "Now2.ai RTL Fixer"
 3. Click "Add to Chrome"
 
@@ -72,6 +72,7 @@ RTL Fixer:
 - Never collects or transmits any data
 - Doesn't modify your actual text content
 - Can be disabled for any site with a single click
+- Full [Privacy Policy](https://github.com/idanmashaal/Now2ai-RTL-Fixer/blob/main/PRIVACY_POLICY.md)
 
 ## Development
 
@@ -137,4 +138,4 @@ If you encounter any issues or have suggestions:
 
 ---
 
-Created by <a href="https://go.now2.ai/?from=github" target="_blank">Now2.ai</a> - Transform Your Technology Future. Strategic technology consulting for organizations navigating the new AI-driven landscape.
+Created by [Now2.ai](https://go.now2.ai/?from=github) - Transform Your Technology Future. Strategic technology consulting for organizations navigating the new AI-driven landscape.
