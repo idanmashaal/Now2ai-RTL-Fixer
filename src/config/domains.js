@@ -152,6 +152,7 @@ export const SUPPORTED_DOMAINS = [
         { selector: "flex", classes: ["rtl-auto"] },
         { selector: "relative", classes: ["rtl-auto"] },
         { selector: "textarea", classes: ["rtl-auto"] },
+        { selector: "x-size-full", classes: ["rtl-auto"] }, // Complexity Chrome Extension Canvas Plugin
       ],
     },
   },
