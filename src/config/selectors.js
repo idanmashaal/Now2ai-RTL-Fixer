@@ -3,6 +3,8 @@
  * Defines how to identify and process elements that need RTL handling
  */
 
+import defaultsConfig from "./json/defaults_config.json";
+
 /**
  * @typedef {Object} SelectorConfig
  * @property {string} selector - The attribute, tag, or class to match
@@ -21,27 +23,7 @@
  * Default configuration for element selection
  * Defines which elements should receive RTL handling and how
  */
-export const DEFAULT_SELECTORS = {
-  attributes: [
-    { selector: "contenteditable", classes: ["rtl-auto"] },
-    { selector: "data-is-streaming", classes: ["rtl-auto"] },
-  ],
-  tags: [
-    { selector: "textarea", classes: ["rtl-auto"] },
-    { selector: "rich-textarea", classes: ["rtl-auto"] },
-  ],
-  classes: [
-    { selector: "font-claude-message", classes: ["rtl-auto"] },
-    { selector: "grid", classes: ["rtl-auto"] },
-    { selector: "flex", classes: ["rtl-auto"] },
-    { selector: "textarea", classes: ["rtl-auto"] },
-    { selector: "individual-message", classes: ["rtl-auto"] },
-    { selector: "new-input-ui", classes: ["rtl-inherit"] }, // Specific fix for Gemini as the rich-textarea changes dynamically between rtl and ltr based on the language types
-    { selector: "ql-editor", classes: ["rtl-auto"] },
-    { selector: "ql-container", classes: ["rtl-auto"] },
-    { selector: "source-panel-view-content", classes: ["rtl-auto"] },
-  ],
-};
+export const DEFAULT_SELECTORS = defaultsConfig.selectors;
 
 /**
  * Creates a combined CSS selector string for all configured elements

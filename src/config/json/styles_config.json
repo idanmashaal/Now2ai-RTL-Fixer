@@ -1,0 +1,29 @@
+{
+    "rtl-auto": {
+        "cssRules": {
+            "unicode-bidi": "isolate !important",
+            "direction": "auto !important",
+            "dir": "auto"
+        }
+    },
+    "rtl-inherit": {
+        "cssRules": {
+            "unicode-bidi": "isolate !important",
+            "direction": "inherit !important",
+            "dir": "auto"
+        }
+    },
+    "rtl-force": {
+        "cssRules": {
+            "unicode-bidi": "isolate !important",
+            "direction": "rtl !important",
+            "dir": "rtl"
+        }
+    },
+    "ltr-force": {
+        "cssRules": {
+            "direction": "ltr !important",
+            "dir": "ltr"
+        }
+    }
+}

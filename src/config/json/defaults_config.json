@@ -1,0 +1,93 @@
+{
+    "position": {
+        "bottom": "16px",
+        "right": "66px",
+        "padding": "8px 12px"
+    },
+    "selectors": {
+        "attributes": [
+            {
+                "selector": "contenteditable",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "data-is-streaming",
+                "classes": [
+                    "rtl-auto"
+                ]
+            }
+        ],
+        "tags": [
+            {
+                "selector": "textarea",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "rich-textarea",
+                "classes": [
+                    "rtl-auto"
+                ]
+            }
+        ],
+        "classes": [
+            {
+                "selector": "font-claude-message",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "grid",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "flex",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "textarea",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "individual-message",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "new-input-ui",
+                "classes": [
+                    "rtl-inherit"
+                ]
+            },
+            {
+                "selector": "ql-editor",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "ql-container",
+                "classes": [
+                    "rtl-auto"
+                ]
+            },
+            {
+                "selector": "source-panel-view-content",
+                "classes": [
+                    "rtl-auto"
+                ]
+            }
+        ]
+    }
+}
