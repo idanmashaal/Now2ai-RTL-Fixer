@@ -58,7 +58,7 @@
         }
     },
     {
-        "domain": "^Xnotebooklm\\.Xgoogle\\.Xcom$",
+        "domain": "^notebooklm\\.google\\.com$",
         "position": {
             "top": "12px",
             "right": "420px",
