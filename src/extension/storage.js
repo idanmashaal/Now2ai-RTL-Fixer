@@ -3,7 +3,7 @@
  * Handles persistent storage of extension state and settings using chrome.storage
  */
 import { debugLog } from "../utils/utils.js";
-
+import { BRAND, VERSION, DEBUG, ENV } from "../config/constants.js";
 /**
  * @typedef {Object} RTLSettings
  * @property {boolean} enabled - Whether RTL Fixer is enabled
@@ -26,9 +26,9 @@ const DEFAULT_SETTINGS = {
  * @enum {string}
  */
 const StorageKeys = {
-  SETTINGS: "rtl_fixer_settings",
-  LAST_ACTIVE: "rtl_fixer_last_active",
-  CUSTOM_POSITIONS: "rtl_fixer_indicator_positions",
+  SETTINGS: `${BRAND}_rtl_fixer_settings`,
+  LAST_ACTIVE: `${BRAND}_rtl_fixer_last_active`,
+  CUSTOM_POSITIONS: `${BRAND}_rtl_fixer_indicator_positions`,
 };
 
 /**

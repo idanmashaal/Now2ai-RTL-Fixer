@@ -14,6 +14,60 @@ import {
   excludeDomain,
   includeDomain,
 } from "./extension/storage.js";
+import { refreshConfigs, getConfigMetadata } from "./config/config-manager.js";
+
+// Create alarm when extension is installed or updated
+chrome.runtime.onInstalled.addListener(() => {
+  createConfigRefreshAlarm();
+});
+
+// Handle alarm events
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "configRefreshAlarm") {
+    checkForConfigUpdates();
+  }
+});
+
+// Create the config refresh alarm
+async function createConfigRefreshAlarm() {
+  try {
+    // Get current interval from storage
+    const metadata = await getConfigMetadata();
+    const minutes = metadata.refresh_interval_minutes || 360; // Default to 6 hours
+
+    // Clear any existing alarm
+    await chrome.alarms.clear("configRefreshAlarm");
+
+    // Create new alarm
+    chrome.alarms.create("configRefreshAlarm", {
+      periodInMinutes: minutes,
+    });
+
+    console.log(`Config refresh alarm set for every ${minutes} minutes`);
+  } catch (error) {
+    console.error("Error creating config refresh alarm:", error);
+  }
+}
+
+// Function to check for updates
+async function checkForConfigUpdates() {
+  try {
+    console.log("Background update check triggered by alarm");
+    await refreshConfigs();
+  } catch (error) {
+    console.error("Error checking for config updates:", error);
+  }
+}
+
+// Also add a message listener to update the alarm when interval changes
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "updateRefreshInterval") {
+    createConfigRefreshAlarm()
+      .then(() => sendResponse({ success: true }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true; // Keep the message channel open for async response
+  }
+});
 
 /**
  * Handles messages from the popup and content scripts

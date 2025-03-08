@@ -4,6 +4,13 @@
  */
 import { debugLog } from "./utils/utils.js";
 import { VERSION, DEBUG, ENV } from "./config/constants.js";
+import {
+  refreshConfigs,
+  clearAllConfigs,
+  getConfigStatus,
+  getConfigSourceInfo,
+  setRefreshInterval,
+} from "./config/config-manager.js";
 
 // Get DOM elements
 const siteToggle = document.getElementById("site-toggle");
@@ -15,6 +22,17 @@ const refreshLink = document.getElementById("refresh-link");
 const resetPosition = document.getElementById("reset-position");
 const resetPositionLink = document.getElementById("reset-position-link");
 const footerElement = document.getElementById("footer-text");
+const refreshConfigBtn = document.getElementById("refresh-config-btn");
+const resetConfigBtn = document.getElementById("reset-config-btn");
+const configStatusText = document.getElementById("config-status-text");
+const configDetails = document.getElementById("config-details");
+const refreshIntervalInput = document.getElementById("refresh-interval-input");
+const refreshIntervalBtn = document.getElementById("refresh-interval-button");
+const lastCheckDisplay = document.getElementById("last-check-display");
+const lastUpdateDisplay = document.getElementById("last-update-display");
+const refreshIntervalDisplay = document.getElementById(
+  "refresh-interval-display"
+);
 
 // Load the list of supported domain patterns from domains config
 import { isDomainSupported } from "./config/domains.js";
@@ -63,6 +81,127 @@ async function sendMessageToContentScript(tabId, message) {
     );
     return { success: false, error: "Connection failed" };
   }
+}
+
+/**
+ * Updates the config status display in the popup
+ */
+async function updateConfigStatusDisplay() {
+  debugLog("Updating config status display");
+
+  try {
+    const status = await getConfigStatus();
+    debugLog("Retrieved config status:", status);
+
+    // Update refresh interval display
+    if (status.refreshIntervalMinutes) {
+      updateRefreshIntervalDisplay(status.refreshIntervalMinutes);
+    } else {
+      refreshIntervalDisplay.textContent = "Current: Unknown";
+    }
+
+    // Format last check time
+    let lastCheckText = "Last checked: Never";
+    if (status.lastUpdateCheck) {
+      const date = new Date(status.lastUpdateCheck);
+      lastCheckText = `Last checked: ${date.toLocaleString()}`;
+    }
+    lastCheckDisplay.textContent = lastCheckText;
+
+    // Format last update status
+    let lastUpdateText = "Last update: Never";
+    if (status.lastUpdateTimestamp) {
+      const date = new Date(status.lastUpdateTimestamp);
+      const timeStr = date.toLocaleString();
+
+      // Add status indicator
+      let statusIndicator = "";
+      if (status.lastUpdateStatus === "success") {
+        statusIndicator = " ✓";
+      } else if (status.lastUpdateStatus === "partial") {
+        statusIndicator = " ⚠️";
+      } else if (status.lastUpdateStatus === "failed") {
+        statusIndicator = " ❌";
+      }
+
+      lastUpdateText = `Last update: ${timeStr}${statusIndicator}`;
+    }
+    lastUpdateDisplay.textContent = lastUpdateText;
+
+    // Show detailed config sources if in development mode
+    if (ENV === "development" || DEBUG) {
+      // Your existing code for showing config sources
+    }
+  } catch (error) {
+    debugLog("Error updating config status display:", error);
+    lastCheckDisplay.textContent = "Error getting status";
+    lastUpdateDisplay.textContent = "";
+    refreshIntervalDisplay.textContent = "";
+  }
+}
+
+/**
+ * Handles refreshing configs when the button is clicked
+ */
+async function handleRefreshConfigs() {
+  debugLog("Config refresh button clicked");
+  refreshConfigBtn.disabled = true;
+  refreshConfigBtn.textContent = "Refreshing...";
+
+  try {
+    // Try direct method first
+    try {
+      debugLog("Trying direct refreshConfigs call");
+      await refreshConfigs(true);
+    } catch (directError) {
+      // Fall back to message passing
+      debugLog("Direct call failed, trying message passing:", directError);
+      await sendConfigMessage("refreshConfigs");
+    }
+
+    refreshConfigBtn.textContent = "Refresh Success!";
+    await updateConfigStatusDisplay();
+  } catch (error) {
+    debugLog("Error refreshing configs:", error);
+    refreshConfigBtn.textContent = "Refresh Failed";
+  }
+
+  setTimeout(() => {
+    refreshConfigBtn.disabled = false;
+    refreshConfigBtn.textContent = "Refresh Config";
+  }, 2000);
+}
+
+/**
+ * Handles resetting configs to bundled versions when the button is clicked
+ */
+async function handleResetConfigs() {
+  debugLog("Reset to bundled button clicked");
+  resetConfigBtn.disabled = true;
+  resetConfigBtn.textContent = "Resetting...";
+
+  try {
+    // Try direct method first
+    try {
+      debugLog("Trying direct clearAllConfigs call");
+      await clearAllConfigs();
+    } catch (directError) {
+      // Fall back to message passing
+      debugLog("Direct call failed, trying message passing:", directError);
+      await sendConfigMessage("clearAllConfigs");
+    }
+
+    resetConfigBtn.textContent = "Reset Success!";
+    await updateConfigStatusDisplay();
+  } catch (error) {
+    debugLog("Error resetting configs:", error);
+    resetConfigBtn.textContent = "Reset Failed";
+  }
+
+  setTimeout(() => {
+    resetConfigBtn.disabled = false;
+    resetConfigBtn.textContent = "Reset to Bundled";
+  }, 2000);
 }
 
 /**
@@ -231,6 +370,79 @@ async function resetIndicatorPos() {
 }
 
 /**
+ * Updates the refresh interval display
+ * @param {number} minutes - The current interval in minutes
+ */
+function updateRefreshIntervalDisplay(minutes) {
+  let displayText = `Current: ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+
+  // For intervals >= 60 minutes, also show hours
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    displayText = `Current: ${minutes} minutes`;
+
+    if (hours === 1) {
+      displayText += ` (${hours} hour`;
+      if (remainingMinutes > 0) {
+        displayText += ` and ${remainingMinutes} minute${
+          remainingMinutes !== 1 ? "s" : ""
+        }`;
+      }
+      displayText += ")";
+    } else if (hours > 1) {
+      displayText += ` (${hours} hours`;
+      if (remainingMinutes > 0) {
+        displayText += ` and ${remainingMinutes} minute${
+          remainingMinutes !== 1 ? "s" : ""
+        }`;
+      }
+      displayText += ")";
+    }
+  }
+
+  refreshIntervalDisplay.textContent = displayText;
+}
+
+/**
+ * Handles setting a new refresh interval
+ */
+async function handleSetRefreshInterval() {
+  const minutes = parseInt(refreshIntervalInput.value);
+
+  if (isNaN(minutes) || minutes < 1 || minutes > 1440) {
+    // Invalid input
+    refreshIntervalInput.classList.add("error");
+    setTimeout(() => refreshIntervalInput.classList.remove("error"), 2000);
+    return;
+  }
+
+  refreshIntervalBtn.disabled = true;
+  refreshIntervalBtn.textContent = "Setting...";
+
+  try {
+    const success = await setRefreshInterval(minutes);
+
+    if (success) {
+      refreshIntervalBtn.textContent = "Set!";
+      updateRefreshIntervalDisplay(minutes);
+      refreshIntervalInput.value = "";
+    } else {
+      refreshIntervalBtn.textContent = "Failed";
+    }
+  } catch (error) {
+    debugLog("Error setting refresh interval:", error);
+    refreshIntervalBtn.textContent = "Error";
+  }
+
+  setTimeout(() => {
+    refreshIntervalBtn.disabled = false;
+    refreshIntervalBtn.textContent = "Set";
+  }, 2000);
+}
+
+/**
  * Updates the footer to display version and debug information
  */
 function updateFooter() {
@@ -255,9 +467,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update footer with version and debug info
   updateFooter();
 
+  // Show/hide dev-only controls
+  const refreshIntervalContainer = document.querySelector(
+    ".refresh-interval-container"
+  );
+  if (ENV === "development" || DEBUG) {
+    // Show in development mode
+    refreshIntervalContainer.style.display = "block";
+  } else {
+    // Hide in production mode
+    refreshIntervalContainer.style.display = "none";
+  }
+
+  // Update config status display
+  updateConfigStatusDisplay();
+
   // Set up refresh link click handler
   refreshLink.addEventListener("click", refreshPage);
 
   // Set up reset position link click handler
   resetPositionLink.addEventListener("click", resetIndicatorPos);
+
+  // Set up config management button handlers
+  refreshConfigBtn.addEventListener("click", handleRefreshConfigs);
+  resetConfigBtn.addEventListener("click", handleResetConfigs);
+  refreshIntervalBtn.addEventListener("click", handleSetRefreshInterval);
 });

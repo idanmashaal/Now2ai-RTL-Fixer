@@ -13,7 +13,7 @@ export function debugLog(...args) {
   const now = new Date();
   const timestamp = now.toISOString().replace("T", " ").slice(0, 23);
   const basePrefix = `[${timestamp}][Now2.ai RTL Fixer Debug]`;
-  const errorPrefix = `[${timestamp}][Now2.ai RTL Fixer Error]`; // Added Error prefix
+  const errorPrefix = `[${timestamp}][❌ Now2.ai RTL Fixer Error]`;
 
   if (DEBUG) {
     let isError = false;
@@ -37,7 +37,7 @@ export function debugLog(...args) {
     }
 
     if (isError) {
-      console.error(errorPrefix, ...args); // Use errorPrefix for errors
+      console.log(errorPrefix, ...args); // Use errorPrefix for errors
     } else {
       console.log(basePrefix, ...args); // Use basePrefix for regular logs
     }
@@ -179,4 +179,42 @@ export function getEffectiveDirection(element) {
   }
 
   return "ltr";
+}
+
+/**
+ * Creates a simple hash of a string
+ * @param {string} str - String to hash
+ * @returns {string} Hash value as hex string
+ */
+export async function hashString(str) {
+  // Use the SubtleCrypto API which is available in modern browsers
+  try {
+    // Convert string to buffer
+    const msgBuffer = new TextEncoder().encode(str);
+
+    // Hash the buffer
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+
+    // Convert hash to hex string
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    return hashHex;
+  } catch (error) {
+    debugLog("Error creating hash:", error);
+
+    // Fallback to a simple hash function if SubtleCrypto is unavailable
+    let hash = 0;
+    if (str.length === 0) return hash.toString(16);
+
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+
+    return Math.abs(hash).toString(16);
+  }
 }

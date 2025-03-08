@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Automatically fixes RTL text handling in AI chat platforms",
   "permissions": [
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "*://*.claude.ai/*",

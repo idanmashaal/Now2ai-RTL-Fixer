@@ -174,6 +174,174 @@
       }
     }
 
+    /* Config section styles */
+    .config-section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .config-section {
+        border-top-color: rgba(255,255,255,0.1);
+      }
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+
+    .config-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .config-button {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: #f8f8f8;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .config-button:hover {
+      background: #f0f0f0;
+    }
+
+    .config-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .config-status-container {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .config-details {
+      margin-top: 8px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .config-source {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    .config-source-name {
+      font-weight: 500;
+    }
+
+    .config-source-value {
+      opacity: 0.8;
+    }
+
+    .config-source-badge {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .badge-bundled {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    .badge-remote {
+      background-color: #0071E3;
+      color: white;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .config-button {
+        background: #333;
+        border-color: #555;
+        color: #fff;
+      }
+      .config-button:hover {
+        background: #444;
+      }
+      .config-status-container {
+        color: #aaa;
+      }
+      .badge-bundled {
+        background-color: #555;
+        color: #eee;
+      }
+    }
+
+    .refresh-interval-container {
+      display: none;
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .refresh-interval-label {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .refresh-interval-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .refresh-interval-input {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 12px;
+    }
+
+    .refresh-interval-display {
+      font-size: 11px;
+      color: #666;
+      margin: 4px 0 0 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .refresh-interval-input {
+        background: #333;
+        border-color: #555;
+        color: #fff;
+      }
+      .refresh-interval-display {
+        color: #aaa;
+      }
+    }
+
+    .config-status-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .config-status-line {
+      line-height: 1.4;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .config-status-info {
+        color: #aaa;
+      }
+    }
+
     /* Footer */
     .footer {
       margin-top: 24px;
@@ -245,6 +413,33 @@
         <li>Google NotebookLM</li>
         <li>Perplexity.ai</li>
       </ul>
+    </div>
+  </div>
+
+  <div class="config-section" id="config-section">
+    <h3 class="section-title">Configuration</h3>
+    <div class="config-buttons">
+      <button id="refresh-config-btn" class="config-button">Refresh Config</button>
+      <button id="reset-config-btn" class="config-button">Reset to Bundled</button>
+    </div>
+    <div class="refresh-interval-container">
+      <label for="refresh-interval-input" class="refresh-interval-label">Refresh interval:</label>
+      <div class="refresh-interval-controls">
+        <input
+          type="number"
+          id="refresh-interval-input"
+          class="refresh-interval-input"
+          min="1"
+          max="1440"
+          placeholder="Minutes"
+        >
+        <button id="refresh-interval-button" class="config-button">Set</button>
+      </div>
+    </div>
+    <div id="config-status-container" class="config-status-info">
+      <div id="refresh-interval-display" class="config-status-line">Current: Unknown</div>
+      <div id="last-check-display" class="config-status-line">Last checked: Never</div>
+      <div id="last-update-display" class="config-status-line">Last update: Never</div>
     </div>
   </div>
 
