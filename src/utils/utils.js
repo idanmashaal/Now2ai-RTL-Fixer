@@ -6,12 +6,41 @@
 import { DEBUG } from "../config/constants.js";
 
 /**
- * Logs debug messages only when DEBUG is enabled
- * @param {...any} args - Arguments to pass to console.log
+ * Logs debug or error messages with a timestamp and error prefix if needed.
+ * @param {...any} args - Arguments to pass to console.log or console.error.
  */
 export function debugLog(...args) {
+  const now = new Date();
+  const timestamp = now.toISOString().replace("T", " ").slice(0, 23);
+  const basePrefix = `[${timestamp}][Now2.ai RTL Fixer Debug]`;
+  const errorPrefix = `[${timestamp}][Now2.ai RTL Fixer Error]`; // Added Error prefix
+
   if (DEBUG) {
-    console.log("[RTL Fixer Debug]", ...args);
+    let isError = false;
+    for (const arg of args) {
+      if (
+        arg instanceof Error ||
+        (typeof arg === "string" && arg.toLowerCase().includes("error"))
+      ) {
+        isError = true;
+        break;
+      } else if (
+        typeof arg === "object" &&
+        arg !== null &&
+        arg.message &&
+        typeof arg.message === "string" &&
+        arg.stack
+      ) {
+        isError = true;
+        break;
+      }
+    }
+
+    if (isError) {
+      console.error(errorPrefix, ...args); // Use errorPrefix for errors
+    } else {
+      console.log(basePrefix, ...args); // Use basePrefix for regular logs
+    }
   }
 }
 
@@ -115,11 +144,11 @@ export function safeAddEventListener(element, event, handler, options = {}) {
       try {
         element.removeEventListener(event, handler, options);
       } catch (error) {
-        console.error("Error removing event listener:", error);
+        debugLog("Error removing event listener:", error);
       }
     };
   } catch (error) {
-    console.error("Error adding event listener:", error);
+    debugLog("Error adding event listener:", error);
     return () => {}; // Return no-op cleanup function
   }
 }

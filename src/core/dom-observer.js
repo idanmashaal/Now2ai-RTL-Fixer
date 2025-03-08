@@ -2,6 +2,7 @@
  * @fileoverview DOM Mutation Observer implementation for RTL Fixer
  * Handles watching for and responding to DOM changes that require RTL processing
  */
+import { debugLog } from "../utils/utils.js";
 import {
   getCurrentDomainConfig,
   createElementSelector,
@@ -126,7 +127,7 @@ function createObserver() {
           handleChildListMutation(mutation);
         }
       } catch (error) {
-        console.error("Error processing mutation:", error);
+        debugLog("Error processing mutation:", error);
       }
     });
   });
@@ -173,7 +174,7 @@ export function initializeObserver() {
 
     return true;
   } catch (error) {
-    console.error("Failed to initialize observer:", error);
+    debugLog("Failed to initialize observer:", error);
     throw error;
   }
 }
@@ -192,7 +193,7 @@ export function stopObserver() {
     observerState.isActive = false;
     return true;
   } catch (error) {
-    console.error("Failed to stop observer:", error);
+    debugLog("Failed to stop observer:", error);
     throw error;
   }
 }

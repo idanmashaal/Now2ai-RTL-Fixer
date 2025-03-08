@@ -2,7 +2,7 @@
  * @fileoverview Style management for RTL Fixer
  * Handles creation, injection, and cleanup of CSS styles
  */
-
+import { debugLog } from "../utils/utils.js";
 import { BRAND } from "../config/constants.js";
 import { CSS_CLASSES } from "../config/constants.js";
 import { DEFAULT_SELECTORS } from "../config/selectors.js";
@@ -85,7 +85,7 @@ export function initializeStyles() {
     const css = generateSelectors();
     return injectStyles(css);
   } catch (error) {
-    console.error("Failed to initialize styles:", error);
+    debugLog("Failed to initialize styles:", error);
     throw error;
   }
 }
@@ -111,7 +111,7 @@ export function removeAllStyles() {
     styleState.styleElements.clear();
     return true;
   } catch (error) {
-    console.error("Failed to remove styles:", error);
+    debugLog("Failed to remove styles:", error);
     throw error;
   }
 }

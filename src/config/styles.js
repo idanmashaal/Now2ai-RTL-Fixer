@@ -2,7 +2,7 @@
  * @fileoverview Style configurations for RTL Fixer
  * Defines common styles and themes used across the extension
  */
-
+import { debugLog } from "../utils/utils.js";
 import uiConfig from "./json/ui_config.json";
 
 /**

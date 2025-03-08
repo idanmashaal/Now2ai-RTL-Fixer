@@ -2,14 +2,13 @@
  * @fileoverview UI Indicator component for RTL Fixer
  * Manages the visual indicator showing RTL Fixer's active status
  */
-
+import { debugLog, debounce } from "../utils/utils.js";
 import {
   saveCustomPosition,
   getCustomPosition,
   clearCustomPosition,
 } from "../extension/storage.js";
 import { BRAND, ENV } from "../config/constants.js";
-import { debounce, debugLog } from "../utils/utils.js";
 import { getCurrentDomainConfig } from "../config/domains.js";
 import { addStyles } from "../core/style-manager.js";
 import { THEME } from "../config/styles.js";
@@ -203,7 +202,7 @@ export function showIndicator() {
 
     return indicator;
   } catch (error) {
-    console.error("Failed to show indicator:", error);
+    debugLog("Failed to show indicator:", error);
     throw error;
   }
 }
@@ -224,7 +223,7 @@ export function hideIndicator() {
     }
     return true;
   } catch (error) {
-    console.error("Failed to hide indicator:", error);
+    debugLog("Failed to hide indicator:", error);
     throw error;
   }
 }
@@ -257,7 +256,7 @@ export function updateIndicatorPosition() {
     indicatorState.styles = addStyles(styles);
     return true;
   } catch (error) {
-    console.error("Failed to update indicator position:", error);
+    debugLog("Failed to update indicator position:", error);
     throw error;
   }
 }
@@ -496,7 +495,7 @@ export async function resetIndicatorPosition(indicator = null) {
     debugLog("Reset to default position:", position);
     return true;
   } catch (error) {
-    console.error("Error resetting indicator position:", error);
+    debugLog("Error resetting indicator position:", error);
     return false;
   }
 }

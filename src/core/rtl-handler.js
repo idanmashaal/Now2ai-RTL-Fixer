@@ -2,7 +2,7 @@
  * @fileoverview Core RTL text handling functionality
  * Provides the main logic for applying and managing RTL text direction
  */
-
+import { debugLog } from "../utils/utils.js";
 import { CSS_CLASSES } from "../config/constants.js";
 import {
   getCurrentDomainConfig,
@@ -70,7 +70,7 @@ export function applyRTLStyles(element) {
     // Mark as processed
     processedElements.set(element, new Set(classNames));
   } catch (error) {
-    console.error("Error applying RTL styles:", error);
+    debugLog("Error applying RTL styles:", error);
     throw error;
   }
 }
@@ -95,7 +95,7 @@ export function removeRTLStyles(element) {
     processedElements.delete(element);
     return true;
   } catch (error) {
-    console.error("Error removing RTL styles:", error);
+    debugLog("Error removing RTL styles:", error);
     throw error;
   }
 }

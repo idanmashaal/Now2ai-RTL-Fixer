@@ -2,6 +2,7 @@
  * @fileoverview Storage management for RTL Fixer extension
  * Handles persistent storage of extension state and settings using chrome.storage
  */
+import { debugLog } from "../utils/utils.js";
 
 /**
  * @typedef {Object} RTLSettings
@@ -40,7 +41,7 @@ export async function getSettings() {
     const result = await chrome.storage.sync.get(StorageKeys.SETTINGS);
     return result[StorageKeys.SETTINGS] || DEFAULT_SETTINGS;
   } catch (error) {
-    console.error("Failed to get settings:", error);
+    debugLog("Failed to get settings:", error);
     throw error;
   }
 }
@@ -67,7 +68,7 @@ export async function updateSettings(newSettings) {
       [StorageKeys.SETTINGS]: mergedSettings,
     });
   } catch (error) {
-    console.error("Failed to update settings:", error);
+    debugLog("Failed to update settings:", error);
     throw error;
   }
 }
@@ -82,7 +83,7 @@ export async function isEnabledForDomain(domain) {
     const settings = await getSettings();
     return settings.enabled && !settings.excludedDomains.includes(domain);
   } catch (error) {
-    console.error("Failed to check domain status:", error);
+    debugLog("Failed to check domain status:", error);
     return false;
   }
 }
@@ -100,7 +101,7 @@ export async function excludeDomain(domain) {
       await updateSettings(settings);
     }
   } catch (error) {
-    console.error("Failed to exclude domain:", error);
+    debugLog("Failed to exclude domain:", error);
     throw error;
   }
 }
@@ -118,7 +119,7 @@ export async function includeDomain(domain) {
     );
     await updateSettings(settings);
   } catch (error) {
-    console.error("Failed to include domain:", error);
+    debugLog("Failed to include domain:", error);
     throw error;
   }
 }
@@ -134,7 +135,7 @@ export async function updateLastActive() {
       [StorageKeys.LAST_ACTIVE]: Date.now(),
     });
   } catch (error) {
-    console.error("Failed to update last active timestamp:", error);
+    debugLog("Failed to update last active timestamp:", error);
     // Non-critical error, don't throw
   }
 }
@@ -149,7 +150,7 @@ export async function resetSettings() {
       [StorageKeys.SETTINGS]: DEFAULT_SETTINGS,
     });
   } catch (error) {
-    console.error("Failed to reset settings:", error);
+    debugLog("Failed to reset settings:", error);
     throw error;
   }
 }
@@ -165,7 +166,7 @@ export async function getCustomPosition(domain) {
     const positions = result[StorageKeys.CUSTOM_POSITIONS] || {};
     return positions[domain] || null;
   } catch (error) {
-    console.error("Failed to get custom position:", error);
+    debugLog("Failed to get custom position:", error);
     return null;
   }
 }
@@ -224,7 +225,7 @@ export async function saveCustomPosition(domain, position) {
 
     return true;
   } catch (error) {
-    console.error("Failed to save custom position:", error);
+    debugLog("Failed to save custom position:", error);
     return false;
   }
 }
@@ -252,7 +253,7 @@ export async function clearCustomPosition(domain) {
 
     return true;
   } catch (error) {
-    console.error("Failed to clear custom position:", error);
+    debugLog("Failed to clear custom position:", error);
     return false;
   }
 }

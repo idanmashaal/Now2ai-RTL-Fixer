@@ -2,7 +2,7 @@
  * @fileoverview Core constants for the RTL Fixer extension
  * Defines brand information, versioning, and CSS rules for RTL text handling
  */
-
+import { debugLog } from "../utils/utils.js";
 import stylesConfig from "./json/styles_config.json";
 
 /**

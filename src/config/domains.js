@@ -2,7 +2,7 @@
  * @fileoverview Domain configurations for the RTL Fixer extension
  * Defines supported platforms and their specific layout requirements
  */
-
+import { debugLog } from "../utils/utils.js";
 import {
   DEFAULT_SELECTORS,
   createElementSelector,

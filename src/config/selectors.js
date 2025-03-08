@@ -2,7 +2,7 @@
  * @fileoverview DOM selector configurations and utilities for RTL Fixer
  * Defines how to identify and process elements that need RTL handling
  */
-
+import { debugLog } from "../utils/utils.js";
 import defaultsConfig from "./json/defaults_config.json";
 
 /**

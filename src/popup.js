@@ -2,7 +2,7 @@
  * @fileoverview Popup script for RTL Fixer extension
  * Handles the popup UI and communicates with the content script and storage
  */
-
+import { debugLog } from "./utils/utils.js";
 import { VERSION, DEBUG, ENV } from "./config/constants.js";
 
 // Get DOM elements
@@ -58,7 +58,7 @@ async function sendMessageToContentScript(tabId, message) {
   try {
     return await chrome.tabs.sendMessage(tabId, message);
   } catch (error) {
-    console.error(
+    debugLog(
       "Could not connect to content script. This is normal on unsupported sites."
     );
     return { success: false, error: "Connection failed" };
@@ -86,7 +86,7 @@ async function isEnabledForDomain(hostname) {
       );
     });
   } catch (error) {
-    console.error("Error checking domain status:", error);
+    debugLog("Error checking domain status:", error);
     return false;
   }
 }
@@ -115,7 +115,7 @@ async function toggleForSite(enabled) {
       });
     }
   } catch (error) {
-    console.error("Error toggling extension:", error);
+    debugLog("Error toggling extension:", error);
   }
 }
 
@@ -164,7 +164,7 @@ async function initializePopup() {
       url = new URL(currentTab.url);
       currentHostname = url.hostname;
     } catch (urlError) {
-      console.error("Invalid URL:", urlError);
+      debugLog("Invalid URL:", urlError);
       toggleContainer.style.display = "none";
       unsupportedContainer.style.display = "block";
       return;
@@ -199,7 +199,7 @@ async function initializePopup() {
       unsupportedContainer.style.display = "block";
     }
   } catch (error) {
-    console.error("Failed to initialize popup:", error);
+    debugLog("Failed to initialize popup:", error);
     // Show unsupported container as fallback for any error
     toggleContainer.style.display = "none";
     unsupportedContainer.style.display = "block";
@@ -222,7 +222,7 @@ async function resetIndicatorPos() {
       resetPositionLink.textContent = "Reset to default";
     }, 2000);
   } catch (error) {
-    console.error("Error resetting position:", error);
+    debugLog("Error resetting position:", error);
     resetPositionLink.textContent = "Reset failed";
     setTimeout(() => {
       resetPositionLink.textContent = "Reset to default";

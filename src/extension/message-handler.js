@@ -2,7 +2,7 @@
  * @fileoverview Chrome Extension message handling
  * Manages communication between background script and content script
  */
-
+import { debugLog } from "../utils/utils.js";
 import { initializeObserver, stopObserver } from "../core/dom-observer.js";
 import {
   showIndicator,
@@ -30,7 +30,7 @@ function handleEnable() {
     showIndicator();
     return { success: true };
   } catch (error) {
-    console.error("Failed to enable RTL Fixer:", error);
+    debugLog("Failed to enable RTL Fixer:", error);
     return {
       success: false,
       error: error.message,
@@ -48,7 +48,7 @@ function handleResetPosition() {
     resetIndicatorPosition();
     return { success: true };
   } catch (error) {
-    console.error("Failed to reset indicator position:", error);
+    debugLog("Failed to reset indicator position:", error);
     return {
       success: false,
       error: error.message,
@@ -68,7 +68,7 @@ function handleDisable() {
     hideIndicator();
     return { success: true };
   } catch (error) {
-    console.error("Failed to disable RTL Fixer:", error);
+    debugLog("Failed to disable RTL Fixer:", error);
     return {
       success: false,
       error: error.message,
@@ -103,14 +103,14 @@ export function initializeMessageHandling() {
             const hostname = window.location.hostname;
             // Save disabled state for this domain
             excludeDomain(hostname).catch((err) =>
-              console.error("Failed to update domain settings:", err)
+              debugLog("Failed to update domain settings:", err)
             );
           } else {
             response = handleEnable();
             const hostname = window.location.hostname;
             // Save enabled state for this domain
             includeDomain(hostname).catch((err) =>
-              console.error("Failed to update domain settings:", err)
+              debugLog("Failed to update domain settings:", err)
             );
           }
           break;
@@ -128,7 +128,7 @@ export function initializeMessageHandling() {
       return true; // Keep message channel open for async response
     });
   } catch (error) {
-    console.error("Failed to initialize message handling:", error);
+    debugLog("Failed to initialize message handling:", error);
     throw error;
   }
 }
