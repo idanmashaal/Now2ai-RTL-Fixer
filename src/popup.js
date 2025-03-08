@@ -93,12 +93,9 @@ async function updateConfigStatusDisplay() {
     const status = await getConfigStatus();
     debugLog("Retrieved config status:", status);
 
-    // Update refresh interval display
-    if (status.refreshIntervalMinutes) {
-      updateRefreshIntervalDisplay(status.refreshIntervalMinutes);
-    } else {
-      refreshIntervalDisplay.textContent = "Current: Unknown";
-    }
+    // Update refresh interval display with the actual value from metadata
+    const currentInterval = status.refreshIntervalMinutes || 360; // Fallback to default if not set
+    updateRefreshIntervalDisplay(currentInterval);
 
     // Format last check time
     let lastCheckText = "Last checked: Never";
@@ -144,25 +141,26 @@ async function updateConfigStatusDisplay() {
  * Handles refreshing configs when the button is clicked
  */
 async function handleRefreshConfigs() {
-  debugLog("Config refresh button clicked");
   refreshConfigBtn.disabled = true;
   refreshConfigBtn.textContent = "Refreshing...";
 
   try {
-    // Try direct method first
-    try {
-      debugLog("Trying direct refreshConfigs call");
-      await refreshConfigs(true);
-    } catch (directError) {
-      // Fall back to message passing
-      debugLog("Direct call failed, trying message passing:", directError);
-      await sendConfigMessage("refreshConfigs");
+    // Send message to background script
+    const response = await chrome.runtime.sendMessage({
+      action: "refreshConfigs",
+    });
+
+    if (response && response.success) {
+      refreshConfigBtn.textContent = "Refresh Success!";
+    } else {
+      refreshConfigBtn.textContent = "Refresh Failed";
+      debugLog("Background refresh failed:", response?.error);
     }
 
-    refreshConfigBtn.textContent = "Refresh Success!";
+    // Update the config status display
     await updateConfigStatusDisplay();
   } catch (error) {
-    debugLog("Error refreshing configs:", error);
+    debugLog("Error communicating with background:", error);
     refreshConfigBtn.textContent = "Refresh Failed";
   }
 
@@ -176,31 +174,82 @@ async function handleRefreshConfigs() {
  * Handles resetting configs to bundled versions when the button is clicked
  */
 async function handleResetConfigs() {
-  debugLog("Reset to bundled button clicked");
   resetConfigBtn.disabled = true;
   resetConfigBtn.textContent = "Resetting...";
 
   try {
-    // Try direct method first
-    try {
-      debugLog("Trying direct clearAllConfigs call");
-      await clearAllConfigs();
-    } catch (directError) {
-      // Fall back to message passing
-      debugLog("Direct call failed, trying message passing:", directError);
-      await sendConfigMessage("clearAllConfigs");
+    // Send message to background script
+    const response = await chrome.runtime.sendMessage({
+      action: "resetConfigs",
+    });
+
+    if (response && response.success) {
+      resetConfigBtn.textContent = "Reset Success!";
+    } else {
+      resetConfigBtn.textContent = "Reset Failed";
+      debugLog("Background reset failed:", response?.error);
     }
 
-    resetConfigBtn.textContent = "Reset Success!";
+    // Update the config status display
     await updateConfigStatusDisplay();
   } catch (error) {
-    debugLog("Error resetting configs:", error);
+    debugLog("Error communicating with background:", error);
     resetConfigBtn.textContent = "Reset Failed";
   }
 
   setTimeout(() => {
     resetConfigBtn.disabled = false;
     resetConfigBtn.textContent = "Reset to Bundled";
+  }, 2000);
+}
+
+/**
+ * Handles setting a new refresh interval
+ */
+async function handleSetRefreshInterval() {
+  const minutes = parseInt(refreshIntervalInput.value);
+
+  if (isNaN(minutes) || minutes < 1 || minutes > 1440) {
+    // Invalid input
+    refreshIntervalInput.classList.add("error");
+    setTimeout(() => refreshIntervalInput.classList.remove("error"), 2000);
+    return;
+  }
+
+  refreshIntervalBtn.disabled = true;
+  refreshIntervalBtn.textContent = "Setting...";
+
+  try {
+    // Send message to background script
+    const response = await chrome.runtime.sendMessage({
+      action: "setRefreshInterval",
+      minutes: minutes,
+    });
+
+    if (response && response.success) {
+      refreshIntervalButton.textContent = "Set!";
+      refreshIntervalInput.value = "";
+
+      // Important: Update the display immediately with the new value
+      updateRefreshIntervalDisplay(minutes);
+
+      // Also update the full status display to ensure everything is in sync
+      await updateConfigStatusDisplay();
+    } else {
+      refreshIntervalBtn.textContent = "Failed";
+      debugLog("Background set interval failed:", response?.error);
+    }
+  } catch (error) {
+    debugLog("Error communicating with background:", error);
+    refreshIntervalBtn.textContent = "Error";
+  }
+
+  setTimeout(() => {
+    refreshIntervalBtn.disabled = false;
+    refreshIntervalBtn.textContent = "Set";
+
+    // Update the status display
+    updateConfigStatusDisplay();
   }, 2000);
 }
 
@@ -403,43 +452,6 @@ function updateRefreshIntervalDisplay(minutes) {
   }
 
   refreshIntervalDisplay.textContent = displayText;
-}
-
-/**
- * Handles setting a new refresh interval
- */
-async function handleSetRefreshInterval() {
-  const minutes = parseInt(refreshIntervalInput.value);
-
-  if (isNaN(minutes) || minutes < 1 || minutes > 1440) {
-    // Invalid input
-    refreshIntervalInput.classList.add("error");
-    setTimeout(() => refreshIntervalInput.classList.remove("error"), 2000);
-    return;
-  }
-
-  refreshIntervalBtn.disabled = true;
-  refreshIntervalBtn.textContent = "Setting...";
-
-  try {
-    const success = await setRefreshInterval(minutes);
-
-    if (success) {
-      refreshIntervalBtn.textContent = "Set!";
-      updateRefreshIntervalDisplay(minutes);
-      refreshIntervalInput.value = "";
-    } else {
-      refreshIntervalBtn.textContent = "Failed";
-    }
-  } catch (error) {
-    debugLog("Error setting refresh interval:", error);
-    refreshIntervalBtn.textContent = "Error";
-  }
-
-  setTimeout(() => {
-    refreshIntervalBtn.disabled = false;
-    refreshIntervalBtn.textContent = "Set";
-  }, 2000);
 }
 
 /**

@@ -14,11 +14,11 @@ import uiConfigBundled from "./json/ui_config.json";
 
 // Storage keys
 const StorageKeys = {
-  CONFIG_METADATA: `${BRAND}_rtl_fixer_config_metadata`,
-  CACHED_CONFIG_DEFAULTS: `${BRAND}_rtl_fixer_cached_config_defaults`,
-  CACHED_CONFIG_DOMAINS: `${BRAND}_rtl_fixer_cached_config_domains`,
-  CACHED_CONFIG_STYLES: `${BRAND}_rtl_fixer_cached_config_styles`,
-  CACHED_CONFIG_UI: `${BRAND}_rtl_fixer_cached_config_ui`,
+  CONFIG_METADATA: "rtl_fixer_config_metadata",
+  CACHED_CONFIG_DEFAULTS: "rtl_fixer_cached_config_defaults",
+  CACHED_CONFIG_DOMAINS: "rtl_fixer_cached_config_domains",
+  CACHED_CONFIG_STYLES: "rtl_fixer_cached_config_styles",
+  CACHED_CONFIG_UI: "rtl_fixer_cached_config_ui",
 };
 
 // Config sources
@@ -242,8 +242,13 @@ async function fetchRemoteConfig(type, contentHash = null) {
     };
   }
 
+  // Add a cache-busting parameter to prevent CDN caching
+  // This is safer than custom headers for CORS
+  const cacheBustUrl = `${url}?t=${Date.now()}`;
+
   debugLog(`Starting fetch for ${type} config from ${url}`);
   debugLog(`Previous content hash: ${contentHash || "none"}`);
+  debugLog(`Using cache-busting URL: ${cacheBustUrl}`);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -254,11 +259,11 @@ async function fetchRemoteConfig(type, contentHash = null) {
   }, UPDATE_CONFIG.REQUEST_TIMEOUT_MS);
 
   try {
-    debugLog(`Fetching remote config for ${type} from ${url}`);
-    const response = await fetch(url, {
+    // Use a simpler fetch with no custom headers to avoid CORS issues
+    const response = await fetch(cacheBustUrl, {
       method: "GET",
       signal: controller.signal,
-      cache: "no-cache", // Always check with server
+      cache: "no-store", // This is safe for CORS
     });
 
     clearTimeout(timeoutId);
@@ -289,6 +294,9 @@ async function fetchRemoteConfig(type, contentHash = null) {
       const newContentHash = await hashString(responseText);
       debugLog(`New content hash for ${type}: ${newContentHash}`);
 
+      // Add some content logging to help debug
+      debugLog(`Content sample for ${type}: ${responseText.slice(0, 100)}...`);
+
       // Check if content is unchanged
       if (contentHash && contentHash === newContentHash) {
         debugLog(`Content unchanged for ${type} based on hash comparison`);
@@ -297,6 +305,13 @@ async function fetchRemoteConfig(type, contentHash = null) {
           status: 200,
           notModified: true,
         };
+      }
+
+      // If we're here, the content has changed or we have no previous hash
+      if (contentHash) {
+        debugLog(
+          `Content changed for ${type} - old hash: ${contentHash}, new hash: ${newContentHash}`
+        );
       }
 
       // Parse the text as JSON
@@ -742,7 +757,7 @@ export async function getConfigStatus() {
     lastUpdateTimestamp: metadata.last_update_timestamp,
     lastUpdateStatus: metadata.last_update_status || "unknown",
     lastSuccessfulUpdate: metadata.last_successful_update,
-    refreshIntervalMinutes: metadata.refresh_interval_minutes, // Changed from hours to minutes
+    refreshIntervalMinutes: metadata.refresh_interval_minutes, // Make sure this is included
     configInfos,
   };
 }
@@ -943,18 +958,18 @@ export async function setRefreshInterval(minutes) {
       refresh_interval_minutes: minutes,
     });
 
-    // Reset content script timer with new interval
-    setupRefreshTimer(minutes);
+    // Reset content script timer if running in content context
+    if (typeof window !== "undefined" && window.configRefreshTimer) {
+      setupRefreshTimer(minutes);
+    }
 
-    // Update background alarm via message
-    try {
-      await chrome.runtime.sendMessage({
-        action: "updateRefreshInterval",
-        minutes: minutes,
+    // If running in background, update the alarm directly
+    if (typeof chrome !== "undefined" && chrome.alarms) {
+      await chrome.alarms.clear("configRefreshAlarm");
+      await chrome.alarms.create("configRefreshAlarm", {
+        periodInMinutes: minutes,
       });
-    } catch (e) {
-      // Ignore errors here - background might not be available
-      debugLog("Failed to update background alarm:", e);
+      debugLog(`Alarm updated to ${minutes} minutes`);
     }
 
     return true;

@@ -14,7 +14,12 @@ import {
   excludeDomain,
   includeDomain,
 } from "./extension/storage.js";
-import { refreshConfigs, getConfigMetadata } from "./config/config-manager.js";
+import {
+  refreshConfigs,
+  clearAllConfigs,
+  setRefreshInterval,
+  getConfigMetadata,
+} from "./config/config-manager.js";
 
 // Create alarm when extension is installed or updated
 chrome.runtime.onInstalled.addListener(() => {
@@ -27,6 +32,84 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     checkForConfigUpdates();
   }
 });
+
+// Handle messages from popup or content scripts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Background received message:", message);
+
+  switch (message.action) {
+    case "refreshConfigs":
+      handleRefreshConfigs(sendResponse);
+      return true; // Keep message channel open for async response
+
+    case "resetConfigs":
+      handleResetConfigs(sendResponse);
+      return true;
+
+    case "setRefreshInterval":
+      handleSetRefreshInterval(message.minutes, sendResponse);
+      return true;
+
+    case "updateRefreshInterval":
+      createConfigRefreshAlarm()
+        .then(() => sendResponse({ success: true }))
+        .catch((error) =>
+          sendResponse({ success: false, error: error.message })
+        );
+      return true;
+  }
+});
+
+/**
+ * Handles refreshing configs
+ * @param {Function} sendResponse - Function to send response back to sender
+ */
+async function handleRefreshConfigs(sendResponse) {
+  try {
+    console.log("Background handling config refresh request");
+    const result = await refreshConfigs(true); // Force refresh
+    console.log("Config refresh result:", result);
+    sendResponse({ success: true, result });
+  } catch (error) {
+    console.error("Error refreshing configs:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Handles resetting configs to bundled versions
+ * @param {Function} sendResponse - Function to send response back to sender
+ */
+async function handleResetConfigs(sendResponse) {
+  try {
+    console.log("Background handling config reset request");
+    const result = await clearAllConfigs();
+    console.log("Config reset result:", result);
+    sendResponse({ success: true, result });
+  } catch (error) {
+    console.error("Error resetting configs:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Handles setting refresh interval
+ * @param {number} minutes - New interval in minutes
+ * @param {Function} sendResponse - Function to send response back to sender
+ */
+async function handleSetRefreshInterval(minutes, sendResponse) {
+  try {
+    console.log(
+      `Background handling set refresh interval request: ${minutes} minutes`
+    );
+    const result = await setRefreshInterval(minutes);
+    console.log("Set refresh interval result:", result);
+    sendResponse({ success: true, result });
+  } catch (error) {
+    console.error("Error setting refresh interval:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
 
 // Create the config refresh alarm
 async function createConfigRefreshAlarm() {

@@ -26,9 +26,9 @@ const DEFAULT_SETTINGS = {
  * @enum {string}
  */
 const StorageKeys = {
-  SETTINGS: `${BRAND}_rtl_fixer_settings`,
-  LAST_ACTIVE: `${BRAND}_rtl_fixer_last_active`,
-  CUSTOM_POSITIONS: `${BRAND}_rtl_fixer_indicator_positions`,
+  SETTINGS: "rtl_fixer_settings",
+  LAST_ACTIVE: "rtl_fixer_last_active",
+  CUSTOM_POSITIONS: "rtl_fixer_indicator_positions",
 };
 
 /**

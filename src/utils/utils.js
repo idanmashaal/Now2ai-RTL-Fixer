@@ -11,7 +11,11 @@ import { DEBUG } from "../config/constants.js";
  */
 export function debugLog(...args) {
   const now = new Date();
-  const timestamp = now.toISOString().replace("T", " ").slice(0, 23);
+  const utcDate = new Date(now.getTime()); // Create a copy for UTC manipulation
+  const timezoneOffset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
+  const localTimestamp = new Date(utcDate.getTime() - timezoneOffset);
+
+  const timestamp = localTimestamp.toISOString().replace("T", " ").slice(0, 23);
   const basePrefix = `[${timestamp}][Now2.ai RTL Fixer Debug]`;
   const errorPrefix = `[${timestamp}][❌ Now2.ai RTL Fixer Error]`;
 
@@ -37,9 +41,9 @@ export function debugLog(...args) {
     }
 
     if (isError) {
-      console.log(errorPrefix, ...args); // Use errorPrefix for errors
+      console.log(errorPrefix, ...args);
     } else {
-      console.log(basePrefix, ...args); // Use basePrefix for regular logs
+      console.log(basePrefix, ...args);
     }
   }
 }
