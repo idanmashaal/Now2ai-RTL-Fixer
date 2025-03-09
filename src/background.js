@@ -15,149 +15,87 @@ import {
   includeDomain,
 } from "./extension/storage.js";
 import {
-  refreshConfigs,
-  clearAllConfigs,
-  setRefreshInterval,
-  getConfigMetadata,
-} from "./config/config-manager.js";
+  initializeBackgroundConfigManager,
+  refreshConfigsIfNeeded,
+  forceRefreshConfigs,
+  resetConfigsToBundled,
+  updateRefreshInterval,
+  getConfigForType,
+  registerContentScript,
+  unregisterContentScript,
+} from "./extension/background-config-manager.js";
 
-// Create alarm when extension is installed or updated
-chrome.runtime.onInstalled.addListener(() => {
-  createConfigRefreshAlarm();
+// Initialize background configuration manager when extension is installed or updated
+chrome.runtime.onInstalled.addListener(async () => {
+  await initializeBackgroundConfigManager();
 });
 
 // Handle alarm events
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "configRefreshAlarm") {
-    checkForConfigUpdates();
+    refreshConfigsIfNeeded();
   }
 });
 
 // Handle messages from popup or content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("Background received message:", message);
+  debugLog("Background received message:", message);
 
   switch (message.action) {
     case "refreshConfigs":
-      handleRefreshConfigs(sendResponse);
+      forceRefreshConfigs()
+        .then((result) => sendResponse({ success: true, result }))
+        .catch((error) =>
+          sendResponse({ success: false, error: error.message })
+        );
       return true; // Keep message channel open for async response
 
     case "resetConfigs":
-      handleResetConfigs(sendResponse);
-      return true;
-
-    case "setRefreshInterval":
-      handleSetRefreshInterval(message.minutes, sendResponse);
-      return true;
-
-    case "updateRefreshInterval":
-      createConfigRefreshAlarm()
-        .then(() => sendResponse({ success: true }))
+      resetConfigsToBundled()
+        .then((result) => sendResponse({ success: true, result }))
         .catch((error) =>
           sendResponse({ success: false, error: error.message })
         );
       return true;
-  }
-});
 
-/**
- * Handles refreshing configs
- * @param {Function} sendResponse - Function to send response back to sender
- */
-async function handleRefreshConfigs(sendResponse) {
-  try {
-    console.log("Background handling config refresh request");
-    const result = await refreshConfigs(true); // Force refresh
-    console.log("Config refresh result:", result);
-    sendResponse({ success: true, result });
-  } catch (error) {
-    console.error("Error refreshing configs:", error);
-    sendResponse({ success: false, error: error.message });
-  }
-}
+    case "setRefreshInterval":
+      updateRefreshInterval(message.minutes)
+        .then((result) => sendResponse({ success: true, result }))
+        .catch((error) =>
+          sendResponse({ success: false, error: error.message })
+        );
+      return true;
 
-/**
- * Handles resetting configs to bundled versions
- * @param {Function} sendResponse - Function to send response back to sender
- */
-async function handleResetConfigs(sendResponse) {
-  try {
-    console.log("Background handling config reset request");
-    const result = await clearAllConfigs();
-    console.log("Config reset result:", result);
-    sendResponse({ success: true, result });
-  } catch (error) {
-    console.error("Error resetting configs:", error);
-    sendResponse({ success: false, error: error.message });
-  }
-}
+    case "getConfig":
+      if (!message.configType) {
+        sendResponse({ success: false, error: "No config type specified" });
+        return true;
+      }
+      getConfigForType(message.configType)
+        .then((config) => sendResponse({ success: true, config }))
+        .catch((error) =>
+          sendResponse({ success: false, error: error.message })
+        );
+      return true;
 
-/**
- * Handles setting refresh interval
- * @param {number} minutes - New interval in minutes
- * @param {Function} sendResponse - Function to send response back to sender
- */
-async function handleSetRefreshInterval(minutes, sendResponse) {
-  try {
-    console.log(
-      `Background handling set refresh interval request: ${minutes} minutes`
-    );
-    const result = await setRefreshInterval(minutes);
-    console.log("Set refresh interval result:", result);
-    sendResponse({ success: true, result });
-  } catch (error) {
-    console.error("Error setting refresh interval:", error);
-    sendResponse({ success: false, error: error.message });
-  }
-}
+    case "registerContentScript":
+      if (sender.tab && sender.tab.id) {
+        registerContentScript(sender.tab.id);
+        sendResponse({ success: true });
+      } else {
+        sendResponse({ success: false, error: "No tab ID available" });
+      }
+      return true;
 
-// Create the config refresh alarm
-async function createConfigRefreshAlarm() {
-  try {
-    // Get current interval from storage
-    const metadata = await getConfigMetadata();
-    const minutes = metadata.refresh_interval_minutes || 360; // Default to 6 hours
+    case "unregisterContentScript":
+      if (sender.tab && sender.tab.id) {
+        unregisterContentScript(sender.tab.id);
+        sendResponse({ success: true });
+      } else {
+        sendResponse({ success: false, error: "No tab ID available" });
+      }
+      return true;
 
-    // Clear any existing alarm
-    await chrome.alarms.clear("configRefreshAlarm");
-
-    // Create new alarm
-    chrome.alarms.create("configRefreshAlarm", {
-      periodInMinutes: minutes,
-    });
-
-    console.log(`Config refresh alarm set for every ${minutes} minutes`);
-  } catch (error) {
-    console.error("Error creating config refresh alarm:", error);
-  }
-}
-
-// Function to check for updates
-async function checkForConfigUpdates() {
-  try {
-    console.log("Background update check triggered by alarm");
-    await refreshConfigs();
-  } catch (error) {
-    console.error("Error checking for config updates:", error);
-  }
-}
-
-// Also add a message listener to update the alarm when interval changes
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "updateRefreshInterval") {
-    createConfigRefreshAlarm()
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => sendResponse({ success: false, error: error.message }));
-    return true; // Keep the message channel open for async response
-  }
-});
-
-/**
- * Handles messages from the popup and content scripts
- */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Handle different message types
-  switch (message.action) {
     case "checkDomain":
       // Check if domain is enabled and send response to popup
       isEnabledForDomain(message.hostname)
@@ -166,7 +104,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           debugLog("Error checking domain status:", error);
           sendResponse({ enabled: true, error: error.message });
         });
-      return true; // Keep message channel open for async response
+      return true;
 
     case "excludeDomain":
       // Disable for this domain
@@ -188,4 +126,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
       return true;
   }
+});
+
+// Handle tab closing to clean up registered content scripts
+chrome.tabs.onRemoved.addListener((tabId) => {
+  unregisterContentScript(tabId);
 });

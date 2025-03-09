@@ -3,10 +3,8 @@
  * Handles creation, injection, and cleanup of CSS styles
  */
 import { debugLog } from "../utils/utils.js";
+import { getConfigFromBackground } from "../utils/config-utils.js";
 import { BRAND } from "../config/constants.js";
-import { CSS_CLASSES } from "../config/constants.js";
-import { DEFAULT_SELECTORS } from "../config/selectors.js";
-import { getCurrentDomainConfig } from "../config/domains.js";
 
 /**
  * @typedef {Object} StyleState
@@ -23,12 +21,12 @@ const styleState = {
 
 /**
  * Generates CSS rules for RTL handling
+ * @param {Object} selectors - Selectors configuration
+ * @param {Object} cssClasses - CSS classes configuration
  * @returns {string} Combined CSS rules
  * @private
  */
-function generateSelectors() {
-  const domainConfig = getCurrentDomainConfig();
-  const selectors = domainConfig.selectors;
+function generateSelectors(selectors, cssClasses) {
   let cssRules = "";
 
   Object.entries(selectors).forEach(([type, items]) => {
@@ -46,7 +44,12 @@ function generateSelectors() {
 
       // Add rules for each class
       classes.forEach((className) => {
-        const rules = CSS_CLASSES[className].cssRules;
+        const rules = cssClasses[className]?.cssRules;
+        if (!rules) {
+          debugLog(`Missing CSS rules for class: ${className}`);
+          return;
+        }
+
         const cssProps = Object.entries(rules)
           .filter(([prop]) => prop !== "dir")
           .map(([prop, value]) => `${prop}: ${value}`)
@@ -80,9 +83,31 @@ function injectStyles(css) {
  * @returns {HTMLStyleElement} The created style element
  * @throws {Error} If styles cannot be injected
  */
-export function initializeStyles() {
+export async function initializeStyles() {
   try {
-    const css = generateSelectors();
+    // Get styles config from background
+    const stylesConfig = await getConfigFromBackground("styles");
+
+    // Get domains config for current domain
+    const domainsConfig = await getConfigFromBackground("domains");
+
+    // Determine the current domain configuration
+    const currentDomain = window.location.hostname;
+    const domainConfig =
+      domainsConfig.find(
+        (config) =>
+          config.domain !== "default" &&
+          new RegExp(config.domain).test(currentDomain)
+      ) || domainsConfig.find((config) => config.domain === "default");
+
+    if (!domainConfig) {
+      throw new Error(`No domain configuration found for: ${currentDomain}`);
+    }
+
+    // Generate CSS based on domain-specific selectors
+    const css = generateSelectors(domainConfig.selectors, stylesConfig);
+
+    // Inject the styles
     return injectStyles(css);
   } catch (error) {
     debugLog("Failed to initialize styles:", error);

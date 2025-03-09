@@ -43,11 +43,12 @@ const dragState = {
 
 /**
  * Gets position configuration for the current domain
- * @returns {Object} Position configuration for the current domain
+ * @returns {Promise<Object>} Position configuration for the current domain
  * @private
  */
-function getDomainPosition() {
-  return getCurrentDomainConfig().position;
+async function getDomainPosition() {
+  const domainConfig = await getCurrentDomainConfig();
+  return domainConfig.position;
 }
 
 /**
@@ -174,10 +175,10 @@ function createIndicatorElement() {
 
 /**
  * Shows the RTL Fixer indicator
- * @returns {HTMLElement} The indicator element
+ * @returns {Promise<HTMLElement>} The indicator element
  * @throws {Error} If indicator cannot be created or positioned
  */
-export function showIndicator() {
+export async function showIndicator() {
   try {
     if (indicatorState.element) {
       return indicatorState.element;
@@ -188,7 +189,7 @@ export function showIndicator() {
     document.body.appendChild(indicator);
 
     // Add styles
-    const position = getDomainPosition();
+    const position = await getDomainPosition();
     const styles = generateIndicatorStyles(position);
     const styleElement = addStyles(styles);
 
@@ -198,7 +199,7 @@ export function showIndicator() {
 
     // Make indicator draggable and apply custom position if available
     makeDraggable(indicator);
-    applyCustomPosition(indicator);
+    await applyCustomPosition(indicator);
 
     return indicator;
   } catch (error) {
@@ -238,15 +239,15 @@ export function isIndicatorVisible() {
 
 /**
  * Updates the indicator's position for the current domain
- * @returns {boolean} True if the update was successful
+ * @returns {Promise<boolean>} True if the update was successful
  */
-export function updateIndicatorPosition() {
+export async function updateIndicatorPosition() {
   try {
     if (!indicatorState.element) {
       return false;
     }
 
-    const position = getDomainPosition();
+    const position = await getDomainPosition();
     const styles = generateIndicatorStyles(position);
 
     if (indicatorState.styles) {
@@ -485,7 +486,7 @@ export async function resetIndicatorPosition(indicator = null) {
     indicator.style.bottom = "";
 
     // Apply default position
-    const position = getDomainPosition();
+    const position = await getDomainPosition();
     Object.entries(position).forEach(([prop, value]) => {
       if (value) {
         indicator.style[prop] = value;

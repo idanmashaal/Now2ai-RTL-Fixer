@@ -3,11 +3,8 @@
  * Handles watching for and responding to DOM changes that require RTL processing
  */
 import { debugLog } from "../utils/utils.js";
-import {
-  getCurrentDomainConfig,
-  createElementSelector,
-} from "../config/domains.js";
-import { SELECTORS } from "../config/selectors.js";
+import { getConfigFromBackground } from "../utils/config-utils.js";
+import { createElementSelector } from "../config/domains.js";
 import { applyRTLStyles, isElementProcessed } from "./rtl-handler.js";
 
 /**
@@ -23,6 +20,11 @@ import { applyRTLStyles, isElementProcessed } from "./rtl-handler.js";
 let observerState = null;
 
 /**
+ * Cache for domain configuration
+ */
+let cachedDomainConfig = null;
+
+/**
  * Direction-related attributes and styles to monitor for changes
  * @type {string[]}
  */
@@ -30,13 +32,39 @@ const DIRECTION_ATTRIBUTES = ["dir"];
 const DIRECTION_STYLES = ["direction", "unicode-bidi"];
 
 /**
+ * Gets the domain configuration for the current site
+ * @returns {Promise<Object>} Domain configuration
+ */
+async function getDomainConfig() {
+  if (!cachedDomainConfig) {
+    // Get domains config
+    const domainsConfig = await getConfigFromBackground("domains");
+
+    // Find matching domain
+    const currentDomain = window.location.hostname;
+    cachedDomainConfig =
+      domainsConfig.find(
+        (config) =>
+          config.domain !== "default" &&
+          new RegExp(config.domain).test(currentDomain)
+      ) || domainsConfig.find((config) => config.domain === "default");
+
+    if (!cachedDomainConfig) {
+      throw new Error(`No domain configuration found for: ${currentDomain}`);
+    }
+  }
+
+  return cachedDomainConfig;
+}
+
+/**
  * Processes a newly added or modified DOM element
  * @param {HTMLElement} element - The element to process
  * @private
  */
-function processElement(element) {
+async function processElement(element) {
   if (!isElementProcessed(element)) {
-    applyRTLStyles(element);
+    await applyRTLStyles(element);
   }
 }
 
@@ -45,14 +73,16 @@ function processElement(element) {
  * @param {HTMLElement} container - The container element to search within
  * @private
  */
-function processChildElements(container) {
-  const domainConfig = getCurrentDomainConfig();
+async function processChildElements(container) {
+  const domainConfig = await getDomainConfig();
   const elementSelector = createElementSelector(domainConfig.selectors);
-  container.querySelectorAll(elementSelector).forEach((element) => {
+  const elements = container.querySelectorAll(elementSelector);
+
+  for (const element of elements) {
     if (!isElementProcessed(element)) {
-      applyRTLStyles(element);
+      await applyRTLStyles(element);
     }
-  });
+  }
 }
 
 /**
@@ -84,14 +114,14 @@ function isDirectionChange(mutation) {
  * @param {MutationRecord} mutation - The mutation record to process
  * @private
  */
-function handleAttributeMutation(mutation) {
+async function handleAttributeMutation(mutation) {
   if (mutation.target instanceof HTMLElement) {
     const element = mutation.target;
-    const domainConfig = getCurrentDomainConfig();
+    const domainConfig = await getDomainConfig();
     const elementSelector = createElementSelector(domainConfig.selectors);
 
     if (isDirectionChange(mutation) || element.matches(elementSelector)) {
-      processElement(element);
+      await processElement(element);
     }
   }
 }
@@ -101,15 +131,15 @@ function handleAttributeMutation(mutation) {
  * @param {MutationRecord} mutation - The mutation record to process
  * @private
  */
-function handleChildListMutation(mutation) {
-  mutation.addedNodes.forEach((node) => {
+async function handleChildListMutation(mutation) {
+  for (const node of mutation.addedNodes) {
     if (node instanceof HTMLElement) {
       // Process the new element itself
-      processElement(node);
+      await processElement(node);
       // Process any matching children
-      processChildElements(node);
+      await processChildElements(node);
     }
-  });
+  }
 }
 
 /**
@@ -119,7 +149,7 @@ function handleChildListMutation(mutation) {
  */
 function createObserver() {
   return new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
+    for (const mutation of mutations) {
       try {
         if (mutation.type === "attributes") {
           handleAttributeMutation(mutation);
@@ -129,23 +159,23 @@ function createObserver() {
       } catch (error) {
         debugLog("Error processing mutation:", error);
       }
-    });
+    }
   });
 }
 
 /**
  * Initializes the DOM observer
- * @returns {boolean} True if initialization was successful
+ * @returns {Promise<boolean>} True if initialization was successful
  * @throws {Error} If observer cannot be initialized
  */
-export function initializeObserver() {
+export async function initializeObserver() {
   if (observerState?.isActive) {
     return false;
   }
 
   try {
     const observer = createObserver();
-    const domainConfig = getCurrentDomainConfig();
+    const domainConfig = await getDomainConfig();
 
     // Configure what to observe - expanded to catch more changes
     const observerConfig = {
@@ -170,7 +200,7 @@ export function initializeObserver() {
     };
 
     // Process existing elements
-    processChildElements(document.body);
+    await processChildElements(document.body);
 
     return true;
   } catch (error) {
