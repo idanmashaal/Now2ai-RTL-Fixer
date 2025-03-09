@@ -5,21 +5,19 @@
 
 import { BRAND, VERSION, DEBUG, ENV } from "./constants.js";
 import { debugLog, hashString } from "../utils/utils.js";
+import {
+  getConfigMetadata as getStoredConfigMetadata,
+  updateConfigMetadata as updateStoredConfigMetadata,
+  getCachedConfig as getStoredCachedConfig,
+  saveCachedConfig as saveStoredCachedConfig,
+  clearAllCachedConfigs,
+} from "../extension/storage.js";
 
 // Import bundled configs
 import defaultsConfigBundled from "./json/defaults_config.json";
 import domainsConfigBundled from "./json/domains_config.json";
 import stylesConfigBundled from "./json/styles_config.json";
 import uiConfigBundled from "./json/ui_config.json";
-
-// Storage keys
-const StorageKeys = {
-  CONFIG_METADATA: "rtl_fixer_config_metadata",
-  CACHED_CONFIG_DEFAULTS: "rtl_fixer_cached_config_defaults",
-  CACHED_CONFIG_DOMAINS: "rtl_fixer_cached_config_domains",
-  CACHED_CONFIG_STYLES: "rtl_fixer_cached_config_styles",
-  CACHED_CONFIG_UI: "rtl_fixer_cached_config_ui",
-};
 
 // Config sources
 const ConfigSource = {
@@ -121,32 +119,16 @@ let isProcessingQueue = false;
  * @returns {Promise<Object>} Config metadata
  */
 export async function getConfigMetadata() {
-  try {
-    const result = await chrome.storage.local.get(StorageKeys.CONFIG_METADATA);
-    return result[StorageKeys.CONFIG_METADATA] || { ...DEFAULT_METADATA };
-  } catch (error) {
-    debugLog("Error getting config metadata:", error);
-    return { ...DEFAULT_METADATA };
-  }
+  return await getStoredConfigMetadata();
 }
 
 /**
  * Updates the config metadata in storage
  * @param {Object} metadata - New metadata to store
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} Success status
  */
 async function updateConfigMetadata(metadata) {
-  try {
-    await chrome.storage.local.set({
-      [StorageKeys.CONFIG_METADATA]: {
-        ...(await getConfigMetadata()),
-        ...metadata,
-        version: VERSION, // Always use current version
-      },
-    });
-  } catch (error) {
-    debugLog("Error updating config metadata:", error);
-  }
+  return await updateStoredConfigMetadata(metadata);
 }
 
 /**
@@ -155,14 +137,7 @@ async function updateConfigMetadata(metadata) {
  * @returns {Promise<Object|null>} Cached config or null if not found
  */
 async function getCachedConfig(type) {
-  const storageKey = getStorageKeyForType(type);
-  try {
-    const result = await chrome.storage.local.get(storageKey);
-    return result[storageKey] || null;
-  } catch (error) {
-    debugLog(`Error getting cached ${type} config:`, error);
-    return null;
-  }
+  return await getStoredCachedConfig(type);
 }
 
 /**
@@ -172,36 +147,7 @@ async function getCachedConfig(type) {
  * @returns {Promise<boolean>} Success status
  */
 async function saveCachedConfig(type, configData) {
-  const storageKey = getStorageKeyForType(type);
-  try {
-    await chrome.storage.local.set({
-      [storageKey]: configData,
-    });
-    return true;
-  } catch (error) {
-    debugLog(`Error saving ${type} config to cache:`, error);
-    return false;
-  }
-}
-
-/**
- * Gets the storage key for a config type
- * @param {string} type - Config type
- * @returns {string} Storage key
- */
-function getStorageKeyForType(type) {
-  switch (type) {
-    case ConfigType.DEFAULTS:
-      return StorageKeys.CACHED_CONFIG_DEFAULTS;
-    case ConfigType.DOMAINS:
-      return StorageKeys.CACHED_CONFIG_DOMAINS;
-    case ConfigType.STYLES:
-      return StorageKeys.CACHED_CONFIG_STYLES;
-    case ConfigType.UI:
-      return StorageKeys.CACHED_CONFIG_UI;
-    default:
-      throw new Error(`Unknown config type: ${type}`);
-  }
+  return await saveStoredCachedConfig(type, configData);
 }
 
 /**
@@ -641,35 +587,7 @@ export async function refreshConfigs(force = false) {
  * @returns {Promise<boolean>} Success status
  */
 export async function clearAllConfigs() {
-  debugLog("Clearing all cached configs");
-
-  try {
-    const keysToRemove = [
-      StorageKeys.CONFIG_METADATA,
-      StorageKeys.CACHED_CONFIG_DEFAULTS,
-      StorageKeys.CACHED_CONFIG_DOMAINS,
-      StorageKeys.CACHED_CONFIG_STYLES,
-      StorageKeys.CACHED_CONFIG_UI,
-    ];
-
-    debugLog(`Removing storage keys: ${keysToRemove.join(", ")}`);
-    await chrome.storage.local.remove(keysToRemove);
-
-    // Verify the configs were removed
-    const remainingItems = await chrome.storage.local.get(keysToRemove);
-    const removedSuccessfully = Object.keys(remainingItems).length === 0;
-
-    if (removedSuccessfully) {
-      debugLog("Successfully cleared all cached configs");
-    } else {
-      debugLog("Failed to clear all configs, remaining items:", remainingItems);
-    }
-
-    return removedSuccessfully;
-  } catch (error) {
-    debugLog("Error clearing configs:", error);
-    return false;
-  }
+  return await clearAllCachedConfigs();
 }
 
 /**
