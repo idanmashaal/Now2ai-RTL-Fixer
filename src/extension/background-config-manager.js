@@ -63,9 +63,14 @@ async function createConfigRefreshAlarm() {
  */
 export async function refreshConfigsIfNeeded() {
   try {
-    await refreshConfigs();
-    // Broadcast updates to active content scripts
-    broadcastConfigUpdates();
+    // Define the callback function to be invoked when all updates complete
+    const onUpdateComplete = (isFullSuccess, results) => {
+      // Now we can safely broadcast the update to content scripts
+      broadcastConfigUpdates(isFullSuccess, results);
+    };
+
+    // Start the refresh process with the callback
+    await refreshConfigs(false, onUpdateComplete);
   } catch (error) {
     debugLog("Error refreshing configs:", error);
   }
@@ -73,21 +78,18 @@ export async function refreshConfigsIfNeeded() {
 
 /**
  * Forces refresh of all configs
- * @param {boolean} notifyClients - Whether to notify content scripts after refresh
  * @returns {Promise<boolean>} Whether the refresh was successful
  */
-export async function forceRefreshConfigs(notifyClients = true) {
+export async function forceRefreshConfigs() {
   try {
-    const result = await refreshConfigs(true);
+    // Define the callback function to be invoked when all updates complete
+    const onUpdateComplete = (isFullSuccess, results) => {
+      // Now we can safely broadcast the update to content scripts
+      broadcastConfigUpdates(isFullSuccess, results);
+    };
 
-    if (notifyClients) {
-      // Add a delay to ensure the fetch operations complete before notifying clients
-      // This is a compromise between immediate feedback and ensuring up-to-date data
-      setTimeout(() => {
-        broadcastConfigUpdates();
-      }, 1000); // 1 second delay
-    }
-
+    // Start the refresh process with the callback
+    const result = await refreshConfigs(true, onUpdateComplete);
     return result;
   } catch (error) {
     debugLog("Error forcing config refresh:", error);
@@ -101,8 +103,10 @@ export async function forceRefreshConfigs(notifyClients = true) {
 export async function resetConfigsToBundled() {
   try {
     const result = await clearAllConfigs();
-    // Broadcast updates to active content scripts
-    broadcastConfigUpdates();
+
+    // Broadcast updates to active content scripts with success information
+    broadcastConfigUpdates(true, { total: 4, success: 4, failed: 0 });
+
     return result;
   } catch (error) {
     debugLog("Error resetting configs:", error);
@@ -156,25 +160,45 @@ export function unregisterContentScript(tabId) {
 
 /**
  * Broadcasts config updates to all active content scripts
+ * @param {boolean} isFullSuccess - Whether all updates were successful
+ * @param {Object} results - Update results with counts of successful and failed updates
  */
-function broadcastConfigUpdates() {
+function broadcastConfigUpdates(isFullSuccess, results) {
   activeContentScripts.forEach((tabId) => {
     try {
-      chrome.tabs
-        .sendMessage(tabId, {
-          action: "configUpdated",
-          timestamp: Date.now(), // Add timestamp to force content scripts to recognize this as a new update
-        })
-        .catch((error) => {
-          // If we can't reach a tab, it may have been closed
-          debugLog(
-            `Error sending to tab ${tabId}, removing from active list:`,
-            error
-          );
+      // First check if the tab still exists
+      chrome.tabs.get(tabId, (tab) => {
+        if (chrome.runtime.lastError) {
+          // Tab doesn't exist anymore
+          debugLog(`Tab ${tabId} no longer exists, removing from active list`);
           activeContentScripts.delete(tabId);
-        });
+          return;
+        }
+
+        // Tab exists, try to send message
+        chrome.tabs.sendMessage(
+          tabId,
+          {
+            action: "configUpdated",
+            isFullSuccess: isFullSuccess,
+            updateResults: results,
+            timestamp: Date.now(),
+          },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              // Content script might not be ready to receive messages
+              debugLog(
+                `Could not deliver message to tab ${tabId}: ${chrome.runtime.lastError.message}`
+              );
+              // Don't remove from active list as the script might just be loading
+            } else {
+              debugLog(`Successfully delivered update to tab ${tabId}`);
+            }
+          }
+        );
+      });
     } catch (error) {
-      debugLog(`Error broadcasting to tab ${tabId}:`, error);
+      debugLog(`Error checking tab ${tabId}:`, error);
     }
   });
 }

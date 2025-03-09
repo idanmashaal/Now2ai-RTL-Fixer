@@ -128,36 +128,11 @@ async function initialize() {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "configUpdated") {
     debugLog(
-      `Received config update notification (timestamp: ${
-        message.timestamp || "none"
-      })`
+      `Received config update notification with results:`,
+      message.updateResults
     );
 
-    // For refresh operations, ensure we have the latest data
-    // by adding a small delay before updating configurations
-    if (message.timestamp) {
-      const currentTime = Date.now();
-      const messageTime = message.timestamp;
-      const timeDiff = currentTime - messageTime;
-
-      debugLog(`Time difference: ${timeDiff}ms`);
-
-      // If the message is very recent (less than 200ms), add a small delay
-      // to ensure all background fetch operations have completed
-      if (timeDiff < 200) {
-        const delayTime = 300 - timeDiff;
-        debugLog(`Adding ${delayTime}ms delay before processing update`);
-
-        setTimeout(() => {
-          updateConfigurations();
-          sendResponse({ success: true });
-        }, delayTime);
-
-        return true; // Keep message channel open for async response
-      }
-    }
-
-    // Process immediately if no timestamp or if message is older
+    // Process the update immediately - we know all fetches are complete
     updateConfigurations();
     sendResponse({ success: true });
     return true;

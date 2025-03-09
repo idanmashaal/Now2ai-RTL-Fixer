@@ -151,7 +151,22 @@ async function handleRefreshConfigs() {
     });
 
     if (response && response.success) {
-      refreshConfigBtn.textContent = "Refresh Success!";
+      refreshConfigBtn.textContent = "Refresh Started";
+
+      // The refresh has started, but we need to wait for it to complete
+      // The background script will handle the actual notification to content scripts
+      // when all configs have been updated
+
+      // We still update the UI after a short delay for better user feedback
+      setTimeout(() => {
+        refreshConfigBtn.textContent = "Refresh Config";
+        refreshConfigBtn.disabled = false;
+
+        // Update the config status display
+        updateConfigStatusDisplay();
+      }, 500);
+
+      return;
     } else {
       refreshConfigBtn.textContent = "Refresh Failed";
       debugLog("Background refresh failed:", response?.error);
@@ -164,6 +179,7 @@ async function handleRefreshConfigs() {
     refreshConfigBtn.textContent = "Refresh Failed";
   }
 
+  // Re-enable button after a short delay (this runs only for failure cases)
   setTimeout(() => {
     refreshConfigBtn.disabled = false;
     refreshConfigBtn.textContent = "Refresh Config";

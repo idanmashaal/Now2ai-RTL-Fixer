@@ -37,13 +37,13 @@ const ConfigType = {
 // Remote config URLs
 const CONFIG_URLS = {
   [ConfigType.DEFAULTS]:
-    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/dynamic-config/src/config/json/defaults_config.json",
+    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/refs/heads/dynamic-config/src/config/json/defaults_config.json",
   [ConfigType.DOMAINS]:
-    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/dynamic-config/src/config/json/domains_config.json",
+    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/refs/heads/dynamic-config/src/config/json/domains_config.json",
   [ConfigType.STYLES]:
-    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/dynamic-config/src/config/json/styles_config.json",
+    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/refs/heads/dynamic-config/src/config/json/styles_config.json",
   [ConfigType.UI]:
-    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/dynamic-config/src/config/json/ui_config.json",
+    "https://raw.githubusercontent.com/idanmashaal/Now2ai-RTL-Fixer/refs/heads/dynamic-config/src/config/json/ui_config.json",
 };
 
 // Update configuration
@@ -331,25 +331,10 @@ async function updateLastUpdateTimestamp(isFullSuccess) {
 }
 
 /**
- * Updates last_successful_update in the metadata after all configs are processed
+ * Processes the update queue, updating each config file one by one
  * @returns {Promise<void>}
+ * @private
  */
-async function updateSuccessfulUpdateTimestamp() {
-  try {
-    const now = Date.now();
-    debugLog(
-      `Updating last_successful_update timestamp to ${new Date(
-        now
-      ).toISOString()}`
-    );
-    await updateConfigMetadata({
-      last_successful_update: now,
-    });
-  } catch (error) {
-    debugLog("Error updating last_successful_update:", error);
-  }
-}
-
 async function processUpdateQueue() {
   debugLog(
     `Process update queue called. Queue length: ${updateQueue.length}, Processing: ${isProcessingQueue}`
@@ -413,6 +398,13 @@ async function processUpdateQueue() {
 
     // Update timestamps with success status
     await updateLastUpdateTimestamp(isFullSuccess);
+
+    // If we have a callback, invoke it with the results
+    if (typeof updateCompletionCallback === "function") {
+      updateCompletionCallback(isFullSuccess, results);
+      // Reset the callback to null after invoking
+      updateCompletionCallback = null;
+    }
   }
 }
 
@@ -544,12 +536,16 @@ async function shouldRefreshConfigs() {
   );
 }
 
+// Callback to be invoked when updates complete
+let updateCompletionCallback = null;
+
 /**
  * Refreshes all configs if needed
  * @param {boolean} [force=false] - Force refresh regardless of time
+ * @param {Function} [onComplete=null] - Optional callback to invoke when refresh completes
  * @returns {Promise<boolean>} Whether any configs were updated
  */
-export async function refreshConfigs(force = false) {
+export async function refreshConfigs(force = false, onComplete = null) {
   debugLog("Starting config refresh check");
 
   // Check if refresh is needed
@@ -578,6 +574,12 @@ export async function refreshConfigs(force = false) {
     debugLog(`Queueing update for ${type} config`);
     queueConfigUpdate(type);
   });
+
+  // Store the callback to be called when updates are complete
+  if (typeof onComplete === "function") {
+    // Set the global callback to be invoked when updates complete
+    updateCompletionCallback = onComplete;
+  }
 
   return true;
 }
