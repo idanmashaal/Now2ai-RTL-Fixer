@@ -38,17 +38,55 @@ async function registerWithBackgroundManager() {
 }
 
 /**
- * Updates configurations and reapplies styles
+ * Updates configurations and reapplies styles and indicator
  */
 async function updateConfigurations() {
   try {
     debugLog("Updating configurations");
+
+    // First hide the indicator if it exists
+    hideIndicator();
+
+    // Clear any cached configurations in memory
+    // This is critical to ensure we load fresh configs
+    if (window.cachedDomainConfig) {
+      window.cachedDomainConfig = null;
+    }
+    if (window.cachedStylesConfig) {
+      window.cachedStylesConfig = null;
+    }
+
     // Reload styles with updated configs
     removeAllStyles();
+
+    // Stop observer before reinitializing everything
+    stopObserver();
+
+    // Reinitialize styles with new configs
     await initializeStyles();
-    debugLog("Applied updated configurations");
+
+    // Reinitialize the observer to catch new elements
+    initializeObserver();
+
+    // Show the indicator with the new configuration
+    // Pass true to force a UI config refresh
+    await showIndicator(true);
+
+    debugLog("Applied updated configurations and reinitialized UI components");
   } catch (error) {
     debugLog("Error updating configurations:", error);
+
+    // Attempt recovery if the update failed
+    try {
+      // Reinitialize styles with potentially cached configs
+      await initializeStyles();
+      initializeObserver();
+      await showIndicator(true);
+
+      debugLog("Recovered from update error");
+    } catch (recoveryError) {
+      debugLog("Recovery failed:", recoveryError);
+    }
   }
 }
 
@@ -89,7 +127,37 @@ async function initialize() {
 // Add message listener for configuration updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "configUpdated") {
-    debugLog("Received config update notification");
+    debugLog(
+      `Received config update notification (timestamp: ${
+        message.timestamp || "none"
+      })`
+    );
+
+    // For refresh operations, ensure we have the latest data
+    // by adding a small delay before updating configurations
+    if (message.timestamp) {
+      const currentTime = Date.now();
+      const messageTime = message.timestamp;
+      const timeDiff = currentTime - messageTime;
+
+      debugLog(`Time difference: ${timeDiff}ms`);
+
+      // If the message is very recent (less than 200ms), add a small delay
+      // to ensure all background fetch operations have completed
+      if (timeDiff < 200) {
+        const delayTime = 300 - timeDiff;
+        debugLog(`Adding ${delayTime}ms delay before processing update`);
+
+        setTimeout(() => {
+          updateConfigurations();
+          sendResponse({ success: true });
+        }, delayTime);
+
+        return true; // Keep message channel open for async response
+      }
+    }
+
+    // Process immediately if no timestamp or if message is older
     updateConfigurations();
     sendResponse({ success: true });
     return true;

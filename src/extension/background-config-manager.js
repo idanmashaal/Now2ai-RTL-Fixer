@@ -73,12 +73,21 @@ export async function refreshConfigsIfNeeded() {
 
 /**
  * Forces refresh of all configs
+ * @param {boolean} notifyClients - Whether to notify content scripts after refresh
+ * @returns {Promise<boolean>} Whether the refresh was successful
  */
-export async function forceRefreshConfigs() {
+export async function forceRefreshConfigs(notifyClients = true) {
   try {
     const result = await refreshConfigs(true);
-    // Broadcast updates to active content scripts
-    broadcastConfigUpdates();
+
+    if (notifyClients) {
+      // Add a delay to ensure the fetch operations complete before notifying clients
+      // This is a compromise between immediate feedback and ensuring up-to-date data
+      setTimeout(() => {
+        broadcastConfigUpdates();
+      }, 1000); // 1 second delay
+    }
+
     return result;
   } catch (error) {
     debugLog("Error forcing config refresh:", error);
@@ -152,7 +161,10 @@ function broadcastConfigUpdates() {
   activeContentScripts.forEach((tabId) => {
     try {
       chrome.tabs
-        .sendMessage(tabId, { action: "configUpdated" })
+        .sendMessage(tabId, {
+          action: "configUpdated",
+          timestamp: Date.now(), // Add timestamp to force content scripts to recognize this as a new update
+        })
         .catch((error) => {
           // If we can't reach a tab, it may have been closed
           debugLog(

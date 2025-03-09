@@ -11,7 +11,10 @@ import {
 import { BRAND, ENV } from "../config/constants.js";
 import { getCurrentDomainConfig } from "../config/domains.js";
 import { addStyles } from "../core/style-manager.js";
-import { THEME } from "../config/styles.js";
+import { getConfigFromBackground } from "../utils/config-utils.js";
+
+// Cache for UI configuration
+let cachedUiConfig = null;
 
 /**
  * @typedef {Object} IndicatorState
@@ -42,6 +45,53 @@ const dragState = {
 };
 
 /**
+ * Gets the UI theme configuration, ensuring fresh data
+ * @param {boolean} forceRefresh - Whether to force a refresh from background
+ * @returns {Promise<Object>} The UI theme configuration
+ */
+async function getUiConfig(forceRefresh = false) {
+  if (!cachedUiConfig || forceRefresh) {
+    try {
+      cachedUiConfig = await getConfigFromBackground("ui");
+      debugLog(
+        "Loaded fresh UI config:",
+        cachedUiConfig ? "success" : "failed"
+      );
+    } catch (error) {
+      debugLog("Error loading UI config:", error);
+      // Fallback to a basic theme if config can't be loaded
+      cachedUiConfig = {
+        theme: {
+          light: {
+            background: "rgba(255, 255, 255, .9)",
+            text: "#000",
+            border: "rgba(0, 0, 0, .1)",
+            link: "#0071E3",
+          },
+          dark: {
+            background: "rgba(0, 0, 0, .8)",
+            text: "#fff",
+            border: "rgba(255, 255, 255, .1)",
+            link: "#66b3ff",
+          },
+        },
+        indicatorBaseStyles: {
+          fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "14px",
+          lineHeight: "1.5",
+          zIndex: "999999",
+          borderRadius: "6px",
+          backdropFilter: "blur(8px)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, .15)",
+          transition: "opacity 0.2s ease",
+        },
+      };
+    }
+  }
+  return cachedUiConfig;
+}
+
+/**
  * Gets position configuration for the current domain
  * @returns {Promise<Object>} Position configuration for the current domain
  * @private
@@ -52,12 +102,17 @@ async function getDomainPosition() {
 }
 
 /**
- * Generates CSS styles for the indicator based on position
+ * Generates CSS styles for the indicator based on position and theme
  * @param {Object} position - Position configuration object
- * @returns {string} CSS rules for the indicator
+ * @param {boolean} forceRefresh - Whether to force a UI config refresh
+ * @returns {Promise<string>} CSS rules for the indicator
  * @private
  */
-function generateIndicatorStyles(position) {
+async function generateIndicatorStyles(position, forceRefresh = false) {
+  // Get fresh UI config with theme
+  const uiConfig = await getUiConfig(forceRefresh);
+  const theme = uiConfig.theme;
+
   // Convert default position values to percentage units if they're in pixels
   const convertedPosition = { ...position };
 
@@ -112,6 +167,7 @@ function generateIndicatorStyles(position) {
     .filter(Boolean)
     .join(";");
 
+  // Use the actually loaded theme values
   return `
     #${BRAND}-indicator {
       position: fixed;
@@ -123,26 +179,26 @@ function generateIndicatorStyles(position) {
       border-radius: 6px;
       backdrop-filter: blur(8px);
       box-shadow: 0 2px 8px rgba(0,0,0,.15);
-      background: rgba(255,255,255,.9);
-      color: #000;
-      border: 1px solid rgba(0,0,0,.1);
+      background: ${theme.light.background};
+      color: ${theme.light.text};
+      border: 1px solid ${theme.light.border};
       transition: opacity 0.2s ease;
     }
 
     #${BRAND}-indicator a {
-      color: ${THEME.light.link};
+      color: ${theme.light.link};
       text-decoration: none;
       font-weight: 500;
     }
 
     @media (prefers-color-scheme: dark) {
       #${BRAND}-indicator {
-        background: rgba(0,0,0,.8);
-        color: #fff;
-        border-color: rgba(255,255,255,.1);
+        background: ${theme.dark.background};
+        color: ${theme.dark.text};
+        border-color: ${theme.dark.border};
       }
       #${BRAND}-indicator a {
-        color: #66b3ff;
+        color: ${theme.dark.link};
       }
     }
   `;
@@ -175,22 +231,29 @@ function createIndicatorElement() {
 
 /**
  * Shows the RTL Fixer indicator
+ * @param {boolean} forceRefresh - Whether to force a UI config refresh
  * @returns {Promise<HTMLElement>} The indicator element
  * @throws {Error} If indicator cannot be created or positioned
  */
-export async function showIndicator() {
+export async function showIndicator(forceRefresh = false) {
   try {
-    if (indicatorState.element) {
+    // If indicator exists and we're not forcing a refresh, just return it
+    if (indicatorState.element && !forceRefresh) {
       return indicatorState.element;
+    }
+
+    // If we're forcing a refresh and the indicator exists, remove it first
+    if (forceRefresh && indicatorState.element) {
+      hideIndicator();
     }
 
     // Create indicator element
     const indicator = createIndicatorElement();
     document.body.appendChild(indicator);
 
-    // Add styles
+    // Add styles with fresh UI config
     const position = await getDomainPosition();
-    const styles = generateIndicatorStyles(position);
+    const styles = await generateIndicatorStyles(position, forceRefresh);
     const styleElement = addStyles(styles);
 
     // Update state
@@ -201,6 +264,10 @@ export async function showIndicator() {
     makeDraggable(indicator);
     await applyCustomPosition(indicator);
 
+    debugLog(
+      "Indicator created with fresh config:",
+      indicator ? "success" : "failed"
+    );
     return indicator;
   } catch (error) {
     debugLog("Failed to show indicator:", error);
@@ -222,6 +289,8 @@ export function hideIndicator() {
       indicatorState.styles.remove();
       indicatorState.styles = null;
     }
+    // Clear the UI config cache to ensure fresh load next time
+    cachedUiConfig = null;
     return true;
   } catch (error) {
     debugLog("Failed to hide indicator:", error);
@@ -239,16 +308,17 @@ export function isIndicatorVisible() {
 
 /**
  * Updates the indicator's position for the current domain
+ * @param {boolean} forceRefresh - Whether to force a UI config refresh
  * @returns {Promise<boolean>} True if the update was successful
  */
-export async function updateIndicatorPosition() {
+export async function updateIndicatorPosition(forceRefresh = false) {
   try {
     if (!indicatorState.element) {
       return false;
     }
 
     const position = await getDomainPosition();
-    const styles = generateIndicatorStyles(position);
+    const styles = await generateIndicatorStyles(position, forceRefresh);
 
     if (indicatorState.styles) {
       indicatorState.styles.remove();
