@@ -2,7 +2,7 @@
     "settings": {
         "debug": {
             "production": false,
-            "development": true
+            "development": false
         }
     },
     "position": {
