@@ -1,7 +1,7 @@
 {
     "settings": {
         "debug": {
-            "production": true,
+            "production": false,
             "development": true
         }
     },
