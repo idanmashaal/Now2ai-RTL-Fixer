@@ -222,12 +222,6 @@ export function stopObserver() {
     observerState.observer.disconnect();
     observerState.isActive = false;
 
-    // Add this code to clean up the refresh timer
-    if (window.configRefreshTimer) {
-      clearInterval(window.configRefreshTimer);
-      window.configRefreshTimer = null;
-    }
-
     return true;
   } catch (error) {
     debugLog("Failed to stop observer:", error);

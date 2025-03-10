@@ -42,6 +42,26 @@ let currentTab = null;
 let currentHostname = null;
 
 /**
+ * Checks if configs need refreshing when popup opens
+ */
+async function checkConfigStatus() {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: "checkConfigRefreshStatus",
+    });
+    if (response && response.shouldRefresh) {
+      debugLog("Popup detected configs need refreshing");
+      // Optionally refresh configs if needed - uncomment if you want auto-refresh
+      // await handleRefreshConfigs();
+    }
+    // Always update the display
+    await updateConfigStatusDisplay();
+  } catch (error) {
+    debugLog("Error checking config status:", error);
+  }
+}
+
+/**
  * Updates the UI based on the current state
  * @param {boolean} isEnabled - Whether RTL Fixer is enabled for the current site
  * @param {boolean} [showRefreshNotice=false] - Whether to show the refresh notice
@@ -509,6 +529,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Update config status display
   updateConfigStatusDisplay();
+
+  // Check if configs need refreshing
+  checkConfigStatus();
 
   // Set up refresh link click handler
   refreshLink.addEventListener("click", refreshPage);

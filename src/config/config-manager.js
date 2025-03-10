@@ -523,7 +523,7 @@ async function initializeConfigType(type) {
  * Checks if it's time to refresh configs
  * @returns {Promise<boolean>} Whether refresh is needed
  */
-async function shouldRefreshConfigs() {
+export async function shouldRefreshConfigs() {
   const metadata = await getConfigMetadata();
   const now = Date.now();
   const lastCheck = metadata.last_update_check || 0;
@@ -608,9 +608,6 @@ export async function initializeConfigs() {
   const metadata = await getConfigMetadata();
   const refreshInterval =
     metadata.refresh_interval_minutes || UPDATE_CONFIG.REFRESH_INTERVAL_MINUTES;
-
-  // Set up periodic checks
-  setupRefreshTimer(refreshInterval);
 }
 /**
  * Gets a specific config
@@ -821,45 +818,6 @@ async function sendConfigMessage(action) {
 export { ConfigType };
 
 /**
- * Sets up a timer to periodically check for config updates
- * @param {number} intervalMinutes - Interval in minutes between checks
- */
-function setupRefreshTimer(intervalMinutes) {
-  const intervalMs = intervalMinutes * 60 * 1000;
-
-  // Clear any existing timer
-  if (window.configRefreshTimer) {
-    clearInterval(window.configRefreshTimer);
-  }
-
-  // Set up new timer
-  debugLog(
-    `Setting up config refresh timer to check every ${intervalMinutes} minutes`
-  );
-  window.configRefreshTimer = setInterval(async () => {
-    debugLog("Config refresh timer triggered");
-    try {
-      const shouldRefresh = await shouldRefreshConfigs();
-      if (shouldRefresh) {
-        debugLog("Auto refresh: Time to check for config updates");
-        await refreshConfigs();
-      } else {
-        debugLog("Auto refresh: Not time to check for updates yet");
-      }
-    } catch (error) {
-      debugLog("Error in refresh timer:", error);
-    }
-  }, intervalMs);
-
-  // Also attach to window unload to clean up
-  window.addEventListener("beforeunload", () => {
-    if (window.configRefreshTimer) {
-      clearInterval(window.configRefreshTimer);
-    }
-  });
-}
-
-/**
  * Updates the refresh interval for config updates
  * @param {number} minutes - New interval in minutes
  * @returns {Promise<boolean>} Success status
@@ -877,11 +835,6 @@ export async function setRefreshInterval(minutes) {
     await updateConfigMetadata({
       refresh_interval_minutes: minutes,
     });
-
-    // Reset content script timer if running in content context
-    if (typeof window !== "undefined" && window.configRefreshTimer) {
-      setupRefreshTimer(minutes);
-    }
 
     // If running in background, update the alarm directly
     if (typeof chrome !== "undefined" && chrome.alarms) {

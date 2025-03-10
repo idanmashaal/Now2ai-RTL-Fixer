@@ -23,10 +23,16 @@ import {
   getConfigForType,
   registerContentScript,
   unregisterContentScript,
+  shouldRefreshConfigs,
 } from "./extension/background-config-manager.js";
 
 // Initialize background configuration manager when extension is installed or updated
 chrome.runtime.onInstalled.addListener(async () => {
+  await initializeBackgroundConfigManager();
+});
+
+// Ensure configuration manager is initialized when browser starts
+chrome.runtime.onStartup.addListener(async () => {
   await initializeBackgroundConfigManager();
 });
 
@@ -125,6 +131,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message });
         });
       return true;
+
+    case "checkConfigRefreshStatus":
+      shouldRefreshConfigs()
+        .then((shouldRefresh) => sendResponse({ shouldRefresh }))
+        .catch((error) =>
+          sendResponse({ shouldRefresh: false, error: error.message })
+        );
+      return true; // Keep message channel open for async response
   }
 });
 

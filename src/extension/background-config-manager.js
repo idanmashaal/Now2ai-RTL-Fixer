@@ -16,8 +16,10 @@ import {
   ConfigType,
   refreshConfigs,
   clearAllConfigs,
+  shouldRefreshConfigs,
 } from "../config/config-manager.js";
 
+export { shouldRefreshConfigs };
 // Track active tabs that need config updates
 const activeContentScripts = new Set();
 
