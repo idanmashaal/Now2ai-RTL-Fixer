@@ -56,6 +56,11 @@ async function updateConfigurations() {
       window.cachedStylesConfig = null;
     }
 
+    // Also clear any UI config cache
+    if (window.cachedUiConfig) {
+      window.cachedUiConfig = null;
+    }
+
     // Reload styles with updated configs
     removeAllStyles();
 
