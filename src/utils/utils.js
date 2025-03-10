@@ -4,43 +4,20 @@
  */
 
 import { ENV, DEBUG } from "../config/constants.js";
+import {
+  getStorageItem,
+  setStorageItem,
+  StorageKeys,
+} from "../extension/storage.js";
+
+// Define the debug storage key as a constant
+const DEBUG_STORAGE_KEY = `${StorageKeys.SETTINGS}_debug`;
 
 // Initially use the build-time DEBUG flag
 let dynamicDebugEnabled = DEBUG;
 
-/**
- * Updates the debug flag based on loaded configuration
- * @param {Object} config - The defaults configuration object
- */
-export function updateDebugConfig(config) {
-  if (config?.settings?.debug) {
-    // We have dynamic debug settings
-    if (ENV === "development") {
-      dynamicDebugEnabled = config.settings.debug.development ?? true;
-    } else {
-      dynamicDebugEnabled = config.settings.debug.production ?? false;
-    }
-  }
-}
-
-/**
- * Checks if debugging is currently enabled
- * @returns {boolean} Whether debugging is enabled
- */
-export function isDebugEnabled() {
-  return dynamicDebugEnabled;
-}
-
-/**
- * Logs debug or error messages with a timestamp and error prefix if needed.
- * @param {...any} args - Arguments to pass to console.log or console.error.
- */
-export function debugLog(...args) {
-  // Only log if debugging is enabled
-  if (!isDebugEnabled()) {
-    return;
-  }
-
+// Define the full debug logging implementation
+const fullDebugLogFunc = function (...args) {
   const now = new Date();
   const utcDate = new Date(now.getTime()); // Create a copy for UTC manipulation
   const timezoneOffset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
@@ -78,6 +55,90 @@ export function debugLog(...args) {
   } else {
     console.log(basePrefix, ...formattedArgs);
   }
+};
+
+// Define a no-op function for when debugging is disabled
+const noopDebugFunc = function () {};
+
+// Add a storage change listener to sync debug state across contexts
+if (typeof chrome !== "undefined" && chrome.storage) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes[DEBUG_STORAGE_KEY]) {
+      dynamicDebugEnabled = changes[DEBUG_STORAGE_KEY].newValue;
+      // Switch function implementation based on new state
+      debugLog = dynamicDebugEnabled ? fullDebugLogFunc : noopDebugFunc;
+    }
+  });
+}
+
+// Initialize debugLog function - will be swapped at runtime
+export let debugLog = dynamicDebugEnabled ? fullDebugLogFunc : noopDebugFunc;
+
+/**
+ * Updates the debug flag based on loaded configuration
+ * @param {Object} config - The defaults configuration object
+ */
+export async function updateDebugConfig(config) {
+  if (!config?.settings?.debug) {
+    return;
+  }
+
+  // Determine the new debug state based on environment
+  const newDebugState =
+    ENV === "development"
+      ? Boolean(config.settings.debug.development)
+      : Boolean(config.settings.debug.production);
+
+  // Only update if the state has changed
+  if (newDebugState !== dynamicDebugEnabled) {
+    // Update debug state
+    dynamicDebugEnabled = newDebugState;
+
+    // Switch the function implementation
+    debugLog = dynamicDebugEnabled ? fullDebugLogFunc : noopDebugFunc;
+
+    try {
+      // Persist the debug state using the existing storage system
+      // This will trigger the storage listener in all contexts
+      await setStorageItem(DEBUG_STORAGE_KEY, dynamicDebugEnabled, true);
+    } catch (error) {
+      // Use console.log since debugLog might be a no-op now
+      console.log("❌ [Now2.ai RTL Fixer] Error saving debug state:", error);
+    }
+  }
+}
+
+/**
+ * Loads the debug state from storage
+ * Should be called during initialization
+ */
+export async function loadDebugState() {
+  try {
+    // Get debug state from storage
+    const storedDebugState = await getStorageItem(
+      DEBUG_STORAGE_KEY,
+      null,
+      true
+    );
+
+    // Only update if we have a stored value
+    if (storedDebugState !== null) {
+      dynamicDebugEnabled = storedDebugState;
+      // Switch function implementation based on stored state
+      debugLog = dynamicDebugEnabled ? fullDebugLogFunc : noopDebugFunc;
+    }
+  } catch (error) {
+    // Can't use debugLog yet as it might not be enabled
+    console.log("❌ [Now2.ai RTL Fixer] Error loading debug state:", error);
+  }
+}
+
+/**
+ * Checks if debugging is currently enabled
+ * @returns {boolean} Whether debugging is enabled
+ */
+export function isDebugEnabled() {
+  return dynamicDebugEnabled;
 }
 
 /**

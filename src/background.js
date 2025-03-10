@@ -7,7 +7,7 @@
  * 2. Manages storage operations
  * 3. Relays messages to content scripts
  */
-import { debugLog } from "./utils/utils.js";
+import { debugLog, loadDebugState } from "./utils/utils.js";
 import {
   getSettings,
   isEnabledForDomain,
@@ -28,11 +28,19 @@ import {
 
 // Initialize background configuration manager when extension is installed or updated
 chrome.runtime.onInstalled.addListener(async () => {
+  // Load debug state first
+  await loadDebugState();
+
+  // Initialize background configuration manager
   await initializeBackgroundConfigManager();
 });
 
 // Ensure configuration manager is initialized when browser starts
 chrome.runtime.onStartup.addListener(async () => {
+  // Load debug state first
+  await loadDebugState();
+
+  // Initialize background configuration manager
   await initializeBackgroundConfigManager();
 });
 

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Main content script that initializes the RTL Fixer functionality
  */
-import { debugLog } from "./utils/utils.js";
+import { debugLog, loadDebugState } from "./utils/utils.js";
 import { VERSION, DEBUG, ENV } from "./config/constants.js";
 import { initializeObserver, stopObserver } from "./core/dom-observer.js";
 import { initializeStyles, removeAllStyles } from "./core/style-manager.js";
@@ -127,6 +127,9 @@ async function updateConfigurations() {
 // Initialize when the document is ready
 async function initialize() {
   try {
+    // Load debug state first
+    await loadDebugState();
+
     debugLog(`RTL Fixer Initializing v${VERSION} | ${ENV} | ${debugText}`);
 
     // Register with background manager

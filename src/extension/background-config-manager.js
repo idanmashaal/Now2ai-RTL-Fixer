@@ -3,14 +3,17 @@
  * Centralizes configuration management in the background service worker
  */
 
-import { debugLog } from "../utils/utils.js";
-import { VERSION } from "../config/constants.js";
+import { debugLog, updateDebugConfig, loadDebugState } from "../utils/utils.js";
+import { VERSION, DEBUG, ENV } from "../config/constants.js";
 import {
   getConfigMetadata,
   updateConfigMetadata,
   getCachedConfig,
   saveCachedConfig,
   clearAllCachedConfigs,
+  setStorageItem,
+  getStorageItem,
+  StorageKeys,
 } from "./storage.js";
 import {
   ConfigType,
@@ -20,6 +23,9 @@ import {
 } from "../config/config-manager.js";
 
 export { shouldRefreshConfigs };
+
+const DEBUG_STORAGE_KEY = `${StorageKeys.SETTINGS}_debug`;
+
 // Track active tabs that need config updates
 const activeContentScripts = new Set();
 
@@ -104,18 +110,24 @@ export async function forceRefreshConfigs() {
  */
 export async function resetConfigsToBundled() {
   try {
+    // Clear all configs
     const result = await clearAllConfigs();
+
+    // Reset debug settings to the original build-time DEBUG value
+    await setStorageItem(DEBUG_STORAGE_KEY, DEBUG, true);
+    debugLog(`Reset debug setting to build-time value: ${DEBUG}`);
+
+    // Make sure any background context reloads the debug state
+    await loadDebugState();
 
     // Broadcast updates to active content scripts with success information
     broadcastConfigUpdates(true, { total: 4, success: 4, failed: 0 });
-
     return result;
   } catch (error) {
     debugLog("Error resetting configs:", error);
     throw error;
   }
 }
-
 /**
  * Sets the refresh interval for config updates
  * @param {number} minutes - New interval in minutes
@@ -215,13 +227,24 @@ export async function getConfigForType(type) {
     // First check cached config
     const cachedConfig = await getCachedConfig(type);
 
+    let config;
     if (cachedConfig && cachedConfig.data) {
-      return cachedConfig.data;
+      config = cachedConfig.data;
+      debugLog(`Got ${type} config from cache`);
+    } else {
+      // Fall back to bundled config
+      const bundledConfig = await import(`../config/json/${type}_config.json`);
+      config = bundledConfig.default;
+      debugLog(`Got ${type} config from bundled fallback`);
     }
 
-    // Fall back to bundled config (loaded via config-manager)
-    const config = await import(`../config/json/${type}_config.json`);
-    return config.default;
+    // Update debug settings if this is the defaults config
+    if (type === ConfigType.DEFAULTS) {
+      debugLog(`Updating debug config with ${type} config settings`);
+      await updateDebugConfig(config);
+    }
+
+    return config;
   } catch (error) {
     debugLog(`Error getting config for ${type}:`, error);
     throw error;

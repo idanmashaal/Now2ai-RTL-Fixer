@@ -449,11 +449,19 @@ export async function clearAllCachedConfigs() {
     StorageKeys.CACHED_CONFIG_DOMAINS,
     StorageKeys.CACHED_CONFIG_STYLES,
     StorageKeys.CACHED_CONFIG_UI,
+    `${StorageKeys.SETTINGS}_debug`, // Make sure this is the exact same key format
   ];
 
   try {
-    debugLog(`Removing storage keys: ${keysToRemove.join(", ")}`);
-    return await removeStorageItem(keysToRemove, true);
+    // Add a log before removal
+    debugLog(`Attempting to remove storage keys: ${keysToRemove.join(", ")}`);
+
+    const result = await removeStorageItem(keysToRemove, true);
+
+    // Add a log after removal
+    debugLog(`Keys removed successfully: ${result}`);
+
+    return result;
   } catch (error) {
     debugLog("Error clearing configs:", error);
     return false;

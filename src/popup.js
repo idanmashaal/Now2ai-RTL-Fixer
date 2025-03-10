@@ -2,7 +2,7 @@
  * @fileoverview Popup script for RTL Fixer extension
  * Handles the popup UI and communicates with the content script and storage
  */
-import { debugLog } from "./utils/utils.js";
+import { debugLog, loadDebugState } from "./utils/utils.js";
 import { VERSION, DEBUG, ENV } from "./config/constants.js";
 import {
   refreshConfigs,
@@ -263,7 +263,7 @@ async function handleSetRefreshInterval() {
     });
 
     if (response && response.success) {
-      refreshIntervalButton.textContent = "Set!";
+      refreshIntervalBtn.textContent = "Set!";
       refreshIntervalInput.value = "";
 
       // Important: Update the display immediately with the new value
@@ -508,7 +508,10 @@ function updateFooter() {
 }
 
 // Initialize when popup is loaded
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Load debug state first
+  await loadDebugState();
+
   // First initialize the popup
   initializePopup();
 

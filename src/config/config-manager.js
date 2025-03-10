@@ -357,6 +357,21 @@ async function processUpdateQueue() {
     // Update timestamps with success status and content change flag
     await updateLastUpdateTimestamp(isFullSuccess, results.contentChanged);
 
+    // If defaults config was updated, make sure we refresh debug settings
+    if (results.success > 0) {
+      try {
+        // Get the fresh defaults config to update debug settings
+        const defaultsConfig = await getConfig(ConfigType.DEFAULTS);
+        debugLog(
+          "Refreshing debug settings after config update with:",
+          JSON.stringify(defaultsConfig.settings?.debug || {})
+        );
+        await updateDebugConfig(defaultsConfig);
+      } catch (e) {
+        debugLog("Error refreshing debug settings:", e);
+      }
+    }
+
     // If we have a callback, invoke it with the results
     if (typeof updateCompletionCallback === "function") {
       updateCompletionCallback(isFullSuccess, results);
