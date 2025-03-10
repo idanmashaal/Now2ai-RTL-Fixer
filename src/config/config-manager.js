@@ -5,6 +5,7 @@
 
 import { BRAND, VERSION, DEBUG, ENV } from "./constants.js";
 import { debugLog, hashString } from "../utils/utils.js";
+import { validateStructure } from "../utils/config-utils.js";
 import {
   getConfigMetadata as getStoredConfigMetadata,
   updateConfigMetadata as updateStoredConfigMetadata,
@@ -65,43 +66,6 @@ const DEFAULT_METADATA = {
   version: VERSION,
 };
 
-// Validation schemas (simple validation)
-const validationSchemas = {
-  [ConfigType.DEFAULTS]: (config) => {
-    return (
-      config &&
-      typeof config === "object" &&
-      config.position &&
-      config.selectors
-    );
-  },
-  [ConfigType.DOMAINS]: (config) => {
-    return (
-      Array.isArray(config) &&
-      config.every(
-        (domain) => domain.domain && domain.position && domain.selectors
-      )
-    );
-  },
-  [ConfigType.STYLES]: (config) => {
-    return (
-      config &&
-      typeof config === "object" &&
-      config["rtl-auto"] &&
-      config["rtl-inherit"] &&
-      config["rtl-force"]
-    );
-  },
-  [ConfigType.UI]: (config) => {
-    return (
-      config &&
-      typeof config === "object" &&
-      config.theme &&
-      config.indicatorBaseStyles
-    );
-  },
-};
-
 // Bundled configs mapped by type
 const bundledConfigs = {
   [ConfigType.DEFAULTS]: defaultsConfigBundled,
@@ -148,26 +112,6 @@ async function getCachedConfig(type) {
  */
 async function saveCachedConfig(type, configData) {
   return await saveStoredCachedConfig(type, configData);
-}
-
-/**
- * Validates a config against its schema
- * @param {string} type - Config type
- * @param {Object} config - Config to validate
- * @returns {boolean} Whether the config is valid
- */
-function validateConfig(type, config) {
-  try {
-    const validator = validationSchemas[type];
-    if (!validator) {
-      debugLog(`No validator found for config type: ${type}`);
-      return false;
-    }
-    return validator(config);
-  } catch (error) {
-    debugLog(`Error validating ${type} config:`, error);
-    return false;
-  }
 }
 
 /**
@@ -458,11 +402,8 @@ async function updateConfigFile(type) {
         return true;
       }
 
-      // Validate new config
-      if (
-        validateConfig(type, result.data) &&
-        validateSchemaCompatibility(type, result.data)
-      ) {
+      // Validate new config - using only validateSchemaCompatibility
+      if (validateSchemaCompatibility(type, result.data)) {
         // Save new config to cache
         const newCachedConfig = {
           source: ConfigSource.REMOTE,
@@ -477,7 +418,7 @@ async function updateConfigFile(type) {
         return true;
       } else {
         debugLog(
-          `Invalid ${type} config received from remote - either basic validation or schema compatibility check failed`
+          `Invalid ${type} config received from remote - schema compatibility check failed`
         );
       }
     } else {
@@ -688,86 +629,8 @@ export async function getConfigStatus() {
 function validateSchemaCompatibility(type, remoteConfig) {
   const bundledConfig = bundledConfigs[type];
 
-  // Simple recursive function to check structure compatibility
-  function isStructureCompatible(bundled, remote) {
-    // Check for different types
-    if (typeof bundled !== typeof remote) {
-      debugLog(
-        `Type mismatch: bundled=${typeof bundled}, remote=${typeof remote}`
-      );
-      return false;
-    }
-
-    // Arrays should contain same types of elements
-    if (Array.isArray(bundled)) {
-      if (!Array.isArray(remote) || remote.length === 0) {
-        return false;
-      }
-
-      // For arrays, we just check the first element as a representative
-      if (bundled.length > 0 && remote.length > 0) {
-        if (typeof bundled[0] !== typeof remote[0]) {
-          debugLog(`Array element type mismatch in ${type}`);
-          return false;
-        }
-
-        // If elements are objects, check their structure
-        if (typeof bundled[0] === "object" && bundled[0] !== null) {
-          // Get all unique keys from bundled items
-          const bundledKeys = new Set();
-          bundled.forEach((item) => {
-            if (item && typeof item === "object") {
-              Object.keys(item).forEach((key) => bundledKeys.add(key));
-            }
-          });
-
-          // Check if first remote item has all required keys
-          const requiredKeys = Array.from(bundledKeys);
-          const missingKeys = requiredKeys.filter(
-            (key) => !remote[0].hasOwnProperty(key)
-          );
-
-          if (missingKeys.length > 0) {
-            debugLog(
-              `Remote config ${type} missing required array item keys: ${missingKeys.join(
-                ", "
-              )}`
-            );
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-
-    // Objects should have compatible structure
-    if (typeof bundled === "object" && bundled !== null) {
-      if (typeof remote !== "object" || remote === null) {
-        return false;
-      }
-
-      // Check if all keys in bundled exist in remote
-      for (const key of Object.keys(bundled)) {
-        if (!remote.hasOwnProperty(key)) {
-          debugLog(`Remote config ${type} missing required key: ${key}`);
-          return false;
-        }
-
-        // Recursively check nested structures
-        if (typeof bundled[key] === "object" && bundled[key] !== null) {
-          if (!isStructureCompatible(bundled[key], remote[key])) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-
-    // For primitive types, we just check type compatibility, already done above
-    return true;
-  }
-
-  return isStructureCompatible(bundledConfig, remoteConfig);
+  // Use the imported validation function
+  return validateStructure(bundledConfig, remoteConfig, type, type);
 }
 
 /**
