@@ -1,20 +1,23 @@
 {
     "rtl-auto": {
         "cssRules": {
-            "direction": "ltr !important",
-            "dir": "ltr"
+            "unicode-bidi": "isolate !important",
+            "direction": "auto !important",
+            "dir": "auto"
         }
     },
     "rtl-inherit": {
         "cssRules": {
-            "direction": "ltr !important",
-            "dir": "ltr"
+            "unicode-bidi": "isolate !important",
+            "direction": "inherit !important",
+            "dir": "auto"
         }
     },
     "rtl-force": {
         "cssRules": {
-            "direction": "ltr !important",
-            "dir": "ltr"
+            "unicode-bidi": "isolate !important",
+            "direction": "rtl !important",
+            "dir": "rtl"
         }
     },
     "ltr-force": {
