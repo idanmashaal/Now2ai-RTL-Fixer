@@ -1,8 +1,8 @@
 {
     "settings": {
         "debug": {
-            "production": true,
-            "development": false
+            "production": false,
+            "development": true
         }
     },
     "position": {
