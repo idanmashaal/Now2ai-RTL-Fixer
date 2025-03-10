@@ -40,12 +40,34 @@ export function debugLog(...args) {
       }
     }
 
+    // Format each argument
+    const formattedArgs = args.map(formatDebugArgument);
+
     if (isError) {
-      console.log(errorPrefix, ...args);
+      console.log(errorPrefix, ...formattedArgs);
     } else {
-      console.log(basePrefix, ...args);
+      console.log(basePrefix, ...formattedArgs);
     }
   }
+}
+
+/**
+ * Formats an argument for debug logging
+ * @param {any} arg - Argument to format
+ * @returns {any} Formatted argument
+ */
+function formatDebugArgument(arg) {
+  if (typeof arg === "object" && arg !== null && !(arg instanceof Error)) {
+    try {
+      // Only convert simple objects, not DOM elements, errors, etc.
+      if (arg.constructor === Object || Array.isArray(arg)) {
+        return JSON.stringify(arg);
+      }
+    } catch (e) {
+      // If serialization fails, return the original object
+    }
+  }
+  return arg;
 }
 
 /**
