@@ -3,13 +3,44 @@
  * Provides helper functions used across the extension
  */
 
-import { DEBUG } from "../config/constants.js";
+import { ENV, DEBUG } from "../config/constants.js";
+
+// Initially use the build-time DEBUG flag
+let dynamicDebugEnabled = DEBUG;
+
+/**
+ * Updates the debug flag based on loaded configuration
+ * @param {Object} config - The defaults configuration object
+ */
+export function updateDebugConfig(config) {
+  if (config?.settings?.debug) {
+    // We have dynamic debug settings
+    if (ENV === "development") {
+      dynamicDebugEnabled = config.settings.debug.development ?? true;
+    } else {
+      dynamicDebugEnabled = config.settings.debug.production ?? false;
+    }
+  }
+}
+
+/**
+ * Checks if debugging is currently enabled
+ * @returns {boolean} Whether debugging is enabled
+ */
+export function isDebugEnabled() {
+  return dynamicDebugEnabled;
+}
 
 /**
  * Logs debug or error messages with a timestamp and error prefix if needed.
  * @param {...any} args - Arguments to pass to console.log or console.error.
  */
 export function debugLog(...args) {
+  // Only log if debugging is enabled
+  if (!isDebugEnabled()) {
+    return;
+  }
+
   const now = new Date();
   const utcDate = new Date(now.getTime()); // Create a copy for UTC manipulation
   const timezoneOffset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
@@ -19,35 +50,33 @@ export function debugLog(...args) {
   const basePrefix = `[${timestamp}][Now2.ai RTL Fixer Debug]`;
   const errorPrefix = `[${timestamp}][❌ Now2.ai RTL Fixer Error]`;
 
-  if (DEBUG) {
-    let isError = false;
-    for (const arg of args) {
-      if (
-        arg instanceof Error ||
-        (typeof arg === "string" && arg.toLowerCase().includes("error"))
-      ) {
-        isError = true;
-        break;
-      } else if (
-        typeof arg === "object" &&
-        arg !== null &&
-        arg.message &&
-        typeof arg.message === "string" &&
-        arg.stack
-      ) {
-        isError = true;
-        break;
-      }
+  let isError = false;
+  for (const arg of args) {
+    if (
+      arg instanceof Error ||
+      (typeof arg === "string" && arg.toLowerCase().includes("error"))
+    ) {
+      isError = true;
+      break;
+    } else if (
+      typeof arg === "object" &&
+      arg !== null &&
+      arg.message &&
+      typeof arg.message === "string" &&
+      arg.stack
+    ) {
+      isError = true;
+      break;
     }
+  }
 
-    // Format each argument
-    const formattedArgs = args.map(formatDebugArgument);
+  // Format each argument
+  const formattedArgs = args.map(formatDebugArgument);
 
-    if (isError) {
-      console.log(errorPrefix, ...formattedArgs);
-    } else {
-      console.log(basePrefix, ...formattedArgs);
-    }
+  if (isError) {
+    console.log(errorPrefix, ...formattedArgs);
+  } else {
+    console.log(basePrefix, ...formattedArgs);
   }
 }
 

@@ -4,7 +4,7 @@
  */
 
 import { BRAND, VERSION, DEBUG, ENV } from "./constants.js";
-import { debugLog, hashString } from "../utils/utils.js";
+import { debugLog, hashString, updateDebugConfig } from "../utils/utils.js";
 import { validateStructure } from "../utils/config-utils.js";
 import {
   getConfigMetadata as getStoredConfigMetadata,
@@ -250,9 +250,10 @@ async function fetchRemoteConfig(type, contentHash = null) {
 /**
  * Updates the timestamp and status for the last update
  * @param {boolean} isFullSuccess - Whether all configs were successfully updated
+ * @param {boolean} contentChanged - Whether any content actually changed
  * @returns {Promise<void>}
  */
-async function updateLastUpdateTimestamp(isFullSuccess) {
+async function updateLastUpdateTimestamp(isFullSuccess, contentChanged) {
   try {
     const now = Date.now();
     const updateType = isFullSuccess ? "successful" : "partial";
@@ -263,11 +264,17 @@ async function updateLastUpdateTimestamp(isFullSuccess) {
     );
 
     await updateConfigMetadata({
-      last_update_timestamp: now,
-      last_update_status: isFullSuccess ? "success" : "partial",
-      last_successful_update: isFullSuccess
-        ? now
-        : await getConfigMetadata().then((m) => m.last_successful_update || 0),
+      last_update_check: now, // Always update the check timestamp
+      // Only update the timestamp if content changed
+      ...(contentChanged && {
+        last_update_timestamp: now,
+        last_update_status: isFullSuccess ? "success" : "partial",
+        last_successful_update: isFullSuccess
+          ? now
+          : await getConfigMetadata().then(
+              (m) => m.last_successful_update || 0
+            ),
+      }),
     });
   } catch (error) {
     debugLog("Error updating update timestamps:", error);
@@ -295,6 +302,7 @@ async function processUpdateQueue() {
     total: 0,
     success: 0,
     failed: 0,
+    contentChanged: false,
   };
 
   try {
@@ -305,13 +313,19 @@ async function processUpdateQueue() {
       results.total++;
 
       try {
-        const success = await updateConfigFile(configType);
+        const result = await updateConfigFile(configType);
         debugLog(
-          `Update result for ${configType}: ${success ? "Success" : "Failed"}`
+          `Update result for ${configType}: ${
+            result.success ? "Success" : "Failed"
+          }`
         );
 
-        if (success) {
+        if (result.success) {
           results.success++;
+          // Check if content was modified (not just fetched)
+          if (result.contentChanged) {
+            results.contentChanged = true;
+          }
         } else {
           results.failed++;
         }
@@ -337,11 +351,11 @@ async function processUpdateQueue() {
     // Only mark as fully successful if all configs updated successfully
     const isFullSuccess = results.failed === 0 && results.success > 0;
     debugLog(
-      `Update summary: ${results.success}/${results.total} configs updated successfully`
+      `Update summary: ${results.success}/${results.total} configs updated successfully, content changed: ${results.contentChanged}`
     );
 
-    // Update timestamps with success status
-    await updateLastUpdateTimestamp(isFullSuccess);
+    // Update timestamps with success status and content change flag
+    await updateLastUpdateTimestamp(isFullSuccess, results.contentChanged);
 
     // If we have a callback, invoke it with the results
     if (typeof updateCompletionCallback === "function") {
@@ -399,10 +413,10 @@ async function updateConfigFile(type) {
           cachedConfig.timestamp = Date.now();
           await saveCachedConfig(type, cachedConfig);
         }
-        return true;
+        return { success: true, contentChanged: false };
       }
 
-      // Validate new config - using only validateSchemaCompatibility
+      // Validate new config
       if (validateSchemaCompatibility(type, result.data)) {
         // Save new config to cache
         const newCachedConfig = {
@@ -415,7 +429,7 @@ async function updateConfigFile(type) {
 
         await saveCachedConfig(type, newCachedConfig);
         debugLog(`Successfully updated ${type} config from remote`);
-        return true;
+        return { success: true, contentChanged: true };
       } else {
         debugLog(
           `Invalid ${type} config received from remote - schema compatibility check failed`
@@ -428,7 +442,7 @@ async function updateConfigFile(type) {
     retryCount++;
   }
 
-  return success;
+  return { success: false, contentChanged: false };
 }
 
 /**
@@ -538,6 +552,10 @@ export async function clearAllConfigs() {
  * @returns {Promise<void>}
  */
 export async function initializeConfigs() {
+  // Initialize debug settings first
+  const defaultsConfig = await getConfig(ConfigType.DEFAULTS);
+  updateDebugConfig(defaultsConfig);
+
   debugLog("Initializing config manager");
 
   // Perform initial refresh check
@@ -559,18 +577,26 @@ export async function getConfig(type) {
   // First try to get cached remote config
   const cachedConfig = await getCachedConfig(type);
 
+  let config;
   if (
     cachedConfig &&
     cachedConfig.data &&
     cachedConfig.source === ConfigSource.REMOTE
   ) {
     debugLog(`Using cached remote ${type} config`);
-    return cachedConfig.data;
+    config = cachedConfig.data;
+  } else {
+    // If no valid remote config, use bundled directly
+    debugLog(`Using bundled ${type} config`);
+    config = bundledConfigs[type];
   }
 
-  // If no valid remote config, use bundled directly
-  debugLog(`Using bundled ${type} config`);
-  return bundledConfigs[type];
+  // Update debug settings if this is the defaults config
+  if (type === ConfigType.DEFAULTS) {
+    updateDebugConfig(config);
+  }
+
+  return config;
 }
 
 /**
