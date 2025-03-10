@@ -4,13 +4,13 @@
       "background": "rgba(255, 255, 255, .9)",
       "text": "#000",
       "border": "rgba(0, 0, 0, .1)",
-      "link": "#c68100"
+      "link": "#1ec600"
     },
     "dark": {
       "background": "rgba(0, 0, 0, .8)",
       "text": "#fff",
       "border": "rgba(255, 255, 255, .1)",
-      "link": "#1ec600"
+      "link": "#66b3ff"
     }
   },
   "indicatorBaseStyles": {
