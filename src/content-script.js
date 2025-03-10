@@ -38,6 +38,35 @@ async function registerWithBackgroundManager() {
 }
 
 /**
+ * Visibility change listener to update configurations when the tab becomes visible again
+ */
+document.addEventListener("visibilitychange", async () => {
+  // Only handle when document becomes visible again (tab is focused)
+  if (document.visibilityState === "visible") {
+    debugLog("Tab gained focus, checking for configuration updates");
+
+    try {
+      // Check if configs should be refreshed by asking the background script
+      const response = await chrome.runtime.sendMessage({
+        action: "checkConfigRefreshStatus",
+      });
+
+      // If we have received updates while the tab was in background, apply them
+      if (response && response.shouldRefresh) {
+        debugLog("Configuration updates detected, applying changes");
+        updateConfigurations();
+      } else {
+        // Even if we don't need a refresh, check if the UI needs updating
+        // This is much lighter than a full update
+        showIndicator(true);
+      }
+    } catch (error) {
+      debugLog("Error checking config status on visibility change:", error);
+    }
+  }
+});
+
+/**
  * Updates configurations and reapplies styles and indicator
  */
 async function updateConfigurations() {
