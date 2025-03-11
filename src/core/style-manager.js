@@ -140,3 +140,11 @@ export function removeAllStyles() {
     throw error;
   }
 }
+
+/**
+ * Gets the count of currently injected style elements
+ * @returns {number} Number of active style elements
+ */
+export function getStyleCount() {
+  return styleState.styleElements.size;
+}

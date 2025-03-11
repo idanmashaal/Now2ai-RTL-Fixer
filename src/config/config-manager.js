@@ -583,6 +583,36 @@ export async function initializeConfigs() {
   const refreshInterval =
     metadata.refresh_interval_minutes || UPDATE_CONFIG.REFRESH_INTERVAL_MINUTES;
 }
+/**
+ * Gets a specific config
+ * @param {string} type - Config type
+ * @returns {Promise<Object>} Config data
+ */
+export async function getConfig(type) {
+  // First try to get cached remote config
+  const cachedConfig = await getCachedConfig(type);
+
+  let config;
+  if (
+    cachedConfig &&
+    cachedConfig.data &&
+    cachedConfig.source === ConfigSource.REMOTE
+  ) {
+    debugLog(`Using cached remote ${type} config`);
+    config = cachedConfig.data;
+  } else {
+    // If no valid remote config, use bundled directly
+    debugLog(`Using bundled ${type} config`);
+    config = bundledConfigs[type];
+  }
+
+  // Update debug settings if this is the defaults config
+  if (type === ConfigType.DEFAULTS) {
+    updateDebugConfig(config);
+  }
+
+  return config;
+}
 
 /**
  * Gets the last update info for a specific config

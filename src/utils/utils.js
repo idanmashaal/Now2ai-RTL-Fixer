@@ -222,12 +222,79 @@ export function createStyleElement(css, id) {
 }
 
 /**
+ * Checks if an element is visible in the viewport
+ * @param {HTMLElement} element - Element to check
+ * @returns {boolean} True if element is visible
+ */
+export function isElementVisible(element) {
+  const rect = element.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= window.innerHeight &&
+    rect.right <= window.innerWidth
+  );
+}
+
+/**
  * Gets the computed text direction of an element
  * @param {HTMLElement} element - Element to check
  * @returns {string} Computed direction ('ltr' or 'rtl')
  */
 export function getComputedDirection(element) {
   return window.getComputedStyle(element).direction;
+}
+
+/**
+ * Safely adds event listeners with error handling
+ * @param {HTMLElement} element - Element to attach listener to
+ * @param {string} event - Event name
+ * @param {Function} handler - Event handler
+ * @param {Object} [options] - Event listener options
+ * @returns {Function} Cleanup function to remove listener
+ */
+export function safeAddEventListener(element, event, handler, options = {}) {
+  try {
+    element.addEventListener(event, handler, options);
+    return () => {
+      try {
+        element.removeEventListener(event, handler, options);
+      } catch (error) {
+        debugLog("Error removing event listener:", error);
+      }
+    };
+  } catch (error) {
+    debugLog("Error adding event listener:", error);
+    return () => {}; // Return no-op cleanup function
+  }
+}
+
+/**
+ * Gets the effective text direction for an element
+ * Considers inherited direction and content
+ * @param {HTMLElement} element - Element to check
+ * @returns {string} Effective direction ('ltr', 'rtl', or 'auto')
+ */
+export function getEffectiveDirection(element) {
+  // Check explicit direction
+  const dirAttr = element.getAttribute("dir");
+  if (dirAttr) {
+    return dirAttr;
+  }
+
+  // Check computed style
+  const computedDir = getComputedDirection(element);
+  if (computedDir !== "ltr") {
+    return computedDir;
+  }
+
+  // Check text content
+  const text = element.textContent || "";
+  if (hasRTLCharacters(text)) {
+    return "rtl";
+  }
+
+  return "ltr";
 }
 
 /**

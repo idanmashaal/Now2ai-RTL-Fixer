@@ -64,6 +64,13 @@ export async function getUiConfig(forceRefresh = false) {
 }
 
 /**
+ * Clears the cached UI config
+ */
+export function clearUiConfigCache() {
+  cachedUiConfig = null;
+}
+
+/**
  * @typedef {Object} Theme
  * @property {Object} light - Light theme colors and styles
  * @property {Object} dark - Dark theme colors and styles

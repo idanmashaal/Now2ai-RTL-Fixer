@@ -106,6 +106,33 @@ export async function removeStorageItem(keys, useLocal = false) {
 }
 
 /**
+ * Gets all keys in storage matching a prefix
+ * @param {string} prefix - Prefix to match
+ * @param {boolean} [useLocal=false] - Whether to use local storage instead of sync
+ * @returns {Promise<Object>} Object with all matching key-value pairs
+ * @throws {Error} If storage access fails
+ */
+export async function getStorageItemsByPrefix(prefix, useLocal = false) {
+  try {
+    const storage = useLocal ? chrome.storage.local : chrome.storage.sync;
+    const result = await storage.get(null); // Get all items
+
+    // Filter for items with the prefix
+    const matchingItems = {};
+    for (const key in result) {
+      if (key.startsWith(prefix)) {
+        matchingItems[key] = result[key];
+      }
+    }
+
+    return matchingItems;
+  } catch (error) {
+    debugLog(`Failed to get storage items with prefix "${prefix}":`, error);
+    throw error;
+  }
+}
+
+/**
  * Gets the current settings from storage
  * @returns {Promise<RTLSettings>} The current settings or defaults if not set
  * @throws {Error} If storage access fails
@@ -207,6 +234,19 @@ export async function updateLastActive() {
   } catch (error) {
     debugLog("Failed to update last active timestamp:", error);
     return false; // Non-critical error, don't throw
+  }
+}
+
+/**
+ * Resets all settings to defaults
+ * @returns {Promise<boolean>} True if successful
+ */
+export async function resetSettings() {
+  try {
+    return await setStorageItem(StorageKeys.SETTINGS, DEFAULT_SETTINGS);
+  } catch (error) {
+    debugLog("Failed to reset settings:", error);
+    throw error;
   }
 }
 

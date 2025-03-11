@@ -26,6 +26,19 @@ import defaultsConfig from "./json/defaults_config.json";
 export const DEFAULT_SELECTORS = defaultsConfig.selectors;
 
 /**
+ * Creates a combined CSS selector string for all configured elements
+ * @param {SelectorsConfig} selectors - Configuration for element selection
+ * @returns {string} Combined CSS selector targeting all relevant elements
+ */
+export function createElementSelector(selectors) {
+  return [
+    ...selectors.attributes.map(({ selector }) => `[${selector}]`),
+    ...selectors.tags.map(({ selector }) => selector),
+    ...selectors.classes.map(({ selector }) => `.${selector}`),
+  ].join(",");
+}
+
+/**
  * Determines which RTL classes should be applied to a given element
  * @param {HTMLElement} element - The DOM element to check
  * @param {SelectorsConfig} selectors - Configuration for element selection
