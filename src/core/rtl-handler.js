@@ -124,12 +124,3 @@ export function removeRTLStyles(element) {
 export function isElementProcessed(element) {
   return processedElements.has(element);
 }
-
-/**
- * Gets the RTL classes applied to an element
- * @param {HTMLElement} element - The element to check
- * @returns {Set<string>|null} Set of applied classes or null if not processed
- */
-export function getAppliedClasses(element) {
-  return processedElements.get(element) || null;
-}

@@ -299,40 +299,6 @@ export function hideIndicator() {
 }
 
 /**
- * Checks if the indicator is currently visible
- * @returns {boolean} True if the indicator is showing
- */
-export function isIndicatorVisible() {
-  return indicatorState.element !== null;
-}
-
-/**
- * Updates the indicator's position for the current domain
- * @param {boolean} forceRefresh - Whether to force a UI config refresh
- * @returns {Promise<boolean>} True if the update was successful
- */
-export async function updateIndicatorPosition(forceRefresh = false) {
-  try {
-    if (!indicatorState.element) {
-      return false;
-    }
-
-    const position = await getDomainPosition();
-    const styles = await generateIndicatorStyles(position, forceRefresh);
-
-    if (indicatorState.styles) {
-      indicatorState.styles.remove();
-    }
-
-    indicatorState.styles = addStyles(styles);
-    return true;
-  } catch (error) {
-    debugLog("Failed to update indicator position:", error);
-    throw error;
-  }
-}
-
-/**
  * Makes the indicator element draggable
  * @param {HTMLElement} indicator - The indicator element to make draggable
  */
@@ -491,17 +457,6 @@ const handleMouseUp = debounce(async (e) => {
     percentage: percentagePosition,
   });
 }, 100);
-
-/**
- * Gets the custom position for the current domain, or falls back to default
- * @param {Object} defaultPosition - Default position to use if no custom position found
- * @returns {Promise<Object>} Position object
- */
-export async function getIndicatorPosition(defaultPosition) {
-  const domain = window.location.hostname;
-  const customPosition = await getCustomPosition(domain);
-  return customPosition || defaultPosition;
-}
 
 /**
  * Updates the indicator position with a custom position if available
