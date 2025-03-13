@@ -185,7 +185,7 @@ async function fetchRemoteConfig(type, contentHash = null) {
       debugLog(`New content hash for ${type}: ${newContentHash}`);
 
       // Add some content logging to help debug
-      debugLog(`Content sample for ${type}: ${responseText.slice(0, 100)}...`);
+      debugLog(`Content sample for ${type}: ${responseText.slice(0, 400)}...`);
 
       // Check if content is unchanged
       if (contentHash && contentHash === newContentHash) {
