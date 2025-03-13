@@ -70,67 +70,67 @@
                 {
                     "selector": "textarea",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "chat-message",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mat-card",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mat-card-content",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "source-viewer-v2",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "labs-tailwind-structural-element-view-v2",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "query-box",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-editor",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "rich-text-editor",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "omnibar",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-panel",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 }
             ],
@@ -138,103 +138,103 @@
                 {
                     "selector": "individual-message",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "source-panel-view-content",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "source-title",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "ql-toolbar",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "ql-snow",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-header__editable-title",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-panel-content",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-button-container",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-button",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-button-content",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mdc-button__ripple",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mdc-button__label",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-title",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "note-details",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mat-focus-indicator",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mat-mdc-button-touch-target",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 },
                 {
                     "selector": "mat-ripple",
                     "classes": [
-                        "ltr-force"
+                        "rtl-auto"
                     ]
                 }
             ]
