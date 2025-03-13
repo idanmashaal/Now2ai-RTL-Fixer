@@ -1,10 +1,4 @@
 {
-    "settings": {
-        "debug": {
-            "production": false,
-            "development": true
-        }
-    },
     "position": {
         "bottom": "16px",
         "right": "66px",
