@@ -27,8 +27,14 @@ import {
 } from "./extension/background-config-manager.js";
 
 // Initialize background configuration manager when extension is installed or updated
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   await initializeBackgroundConfigManager();
+
+  // Force refresh configs on install or update
+  if (details.reason === "install" || details.reason === "update") {
+    debugLog(`Forcing config refresh. Reason: extension ${details.reason}`);
+    await forceRefreshConfigs();
+  }
 });
 
 // Ensure configuration manager is initialized when browser starts

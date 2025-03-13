@@ -252,23 +252,36 @@ async function fetchRemoteConfig(type, contentHash = null) {
  * @param {boolean} isFullSuccess - Whether all configs were successfully updated
  * @returns {Promise<void>}
  */
-async function updateLastUpdateTimestamp(isFullSuccess) {
+async function updateLastUpdateTimestamp(isFullSuccess, contentChanged) {
   try {
     const now = Date.now();
-    const updateType = isFullSuccess ? "successful" : "partial";
-    debugLog(
-      `Updating last_update timestamp (${updateType}) to ${new Date(
-        now
-      ).toISOString()}`
-    );
+    const metadata = await getConfigMetadata();
 
+    // Always update the last_update_check timestamp
     await updateConfigMetadata({
-      last_update_timestamp: now,
-      last_update_status: isFullSuccess ? "success" : "partial",
-      last_successful_update: isFullSuccess
-        ? now
-        : await getConfigMetadata().then((m) => m.last_successful_update || 0),
+      last_update_check: now,
     });
+
+    // Only update last_update_timestamp and last_successful_update
+    // if content actually changed or this is the first successful update
+    if (contentChanged) {
+      const updateType = isFullSuccess ? "successful" : "partial";
+      debugLog(
+        `Updating last_update timestamp (${updateType}) to ${new Date(
+          now
+        ).toISOString()} - content changed`
+      );
+
+      await updateConfigMetadata({
+        last_update_timestamp: now,
+        last_update_status: isFullSuccess ? "success" : "partial",
+        last_successful_update: isFullSuccess
+          ? now
+          : metadata.last_successful_update || 0,
+      });
+    } else {
+      debugLog(`Skipping update of last_update_timestamp - no content changed`);
+    }
   } catch (error) {
     debugLog("Error updating update timestamps:", error);
   }
@@ -295,6 +308,7 @@ async function processUpdateQueue() {
     total: 0,
     success: 0,
     failed: 0,
+    contentChanged: false, // Add this flag to track content changes
   };
 
   try {
@@ -305,13 +319,19 @@ async function processUpdateQueue() {
       results.total++;
 
       try {
-        const success = await updateConfigFile(configType);
+        const updateResult = await updateConfigFile(configType);
         debugLog(
-          `Update result for ${configType}: ${success ? "Success" : "Failed"}`
+          `Update result for ${configType}: ${
+            updateResult.success ? "Success" : "Failed"
+          }, Content changed: ${updateResult.contentChanged}`
         );
 
-        if (success) {
+        if (updateResult.success) {
           results.success++;
+          // Track if any content was actually changed
+          if (updateResult.contentChanged) {
+            results.contentChanged = true;
+          }
         } else {
           results.failed++;
         }
@@ -337,11 +357,11 @@ async function processUpdateQueue() {
     // Only mark as fully successful if all configs updated successfully
     const isFullSuccess = results.failed === 0 && results.success > 0;
     debugLog(
-      `Update summary: ${results.success}/${results.total} configs updated successfully`
+      `Update summary: ${results.success}/${results.total} configs updated successfully, Content changed: ${results.contentChanged}`
     );
 
-    // Update timestamps with success status
-    await updateLastUpdateTimestamp(isFullSuccess);
+    // Update timestamps with success status and content change info
+    await updateLastUpdateTimestamp(isFullSuccess, results.contentChanged);
 
     // If we have a callback, invoke it with the results
     if (typeof updateCompletionCallback === "function") {
@@ -378,6 +398,7 @@ async function updateConfigFile(type) {
 
   let retryCount = 0;
   let success = false;
+  let contentChanged = false; // Add flag to track content changes
 
   while (retryCount < UPDATE_CONFIG.MAX_RETRY_COUNT && !success) {
     if (retryCount > 0) {
@@ -399,27 +420,29 @@ async function updateConfigFile(type) {
           cachedConfig.timestamp = Date.now();
           await saveCachedConfig(type, cachedConfig);
         }
-        return true;
-      }
-
-      // Validate new config - using only validateSchemaCompatibility
-      if (validateSchemaCompatibility(type, result.data)) {
-        // Save new config to cache
-        const newCachedConfig = {
-          source: ConfigSource.REMOTE,
-          timestamp: Date.now(),
-          contentHash: result.contentHash,
-          url: CONFIG_URLS[type],
-          data: result.data,
-        };
-
-        await saveCachedConfig(type, newCachedConfig);
-        debugLog(`Successfully updated ${type} config from remote`);
-        return true;
+        success = true;
+        contentChanged = false; // Content did not change
       } else {
-        debugLog(
-          `Invalid ${type} config received from remote - schema compatibility check failed`
-        );
+        // Validate new config - using only validateSchemaCompatibility
+        if (validateSchemaCompatibility(type, result.data)) {
+          // Save new config to cache
+          const newCachedConfig = {
+            source: ConfigSource.REMOTE,
+            timestamp: Date.now(),
+            contentHash: result.contentHash,
+            url: CONFIG_URLS[type],
+            data: result.data,
+          };
+
+          await saveCachedConfig(type, newCachedConfig);
+          debugLog(`Successfully updated ${type} config from remote`);
+          success = true;
+          contentChanged = true; // Content actually changed
+        } else {
+          debugLog(
+            `Invalid ${type} config received from remote - schema compatibility check failed`
+          );
+        }
       }
     } else {
       debugLog(`Failed to fetch ${type} config:`, result.error);
@@ -428,7 +451,7 @@ async function updateConfigFile(type) {
     retryCount++;
   }
 
-  return success;
+  return { success, contentChanged };
 }
 
 /**
