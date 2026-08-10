@@ -10,7 +10,7 @@
   "host_permissions": [
     "*://*.claude.ai/*",
     "*://*.chatgpt.com/*",
-    "*://notebooklm.google.com/*",
+    "*://notebook.google.com/*",
     "*://gemini.google.com/*",
     "*://*.perplexity.ai/*"
   ],
@@ -39,7 +39,7 @@
       "matches": [
         "*://*.claude.ai/*",
         "*://*.chatgpt.com/*",
-        "*://notebooklm.google.com/*",
+        "*://notebook.google.com/*",
         "*://gemini.google.com/*",
         "*://*.perplexity.ai/*"
       ],

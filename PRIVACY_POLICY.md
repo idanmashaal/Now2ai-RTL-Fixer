@@ -47,7 +47,7 @@ The extension requests access to specific domains:
 ```
 "*://*.claude.ai/*",
 "*://*.chatgpt.com/*",
-"*://notebooklm.google.com/*",
+"*://notebook.google.com/*",
 "*://gemini.google.com/*",
 "*://*.perplexity.ai/*"
 ```
